@@ -10,7 +10,7 @@
 # See /LICENSE for more information.
 #
 
-name: OpenWrt Builder
+name: Openwrt-Fros-HC5962.
 
 on:
   repository_dispatch:
