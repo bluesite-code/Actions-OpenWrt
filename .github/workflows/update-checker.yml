@@ -13,8 +13,8 @@
 name: Update Checker
 
 env:
-  REPO_URL: https://github.com/destan19/openwrt-fros
-  REPO_BRANCH: master
+  REPO_URL: https://github.com/bluesite-code/fros
+  REPO_BRANCH: main
 
 on:
   workflow_dispatch:
