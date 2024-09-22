@@ -17,8 +17,8 @@ on:
   workflow_dispatch:
 
 env:
-  REPO_URL: https://github.com/bluesite-code/fros
-  REPO_BRANCH: main
+  REPO_URL: https://github.com/destan19/openwrt-fros
+  REPO_BRANCH: openwrt-23.05-fros
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   DIY_P0_SH: diy-part0.sh
