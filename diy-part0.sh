@@ -1,30 +1,26 @@
-DEPENDS_PACKAGES="
-	PACKAGE_luci
-	PACKAGE_luci-base
-	LUCI_LANG_zh_Hans
-	PACKAGE_luci-compat
-	PACKAGE_wget-ssl
-	PACKAGE_curl
-	PACKAGE_openssl-util
-	PACKAGE_luci-app-zerotier
-	PACKAGE_iptables-nft 
-	PACKAGE_tc-tiny
-	PACKAGE_iptables-mod-iprange
-	PACKAGE_tc-mod-iptables
-	PACKAGE_kmod-sched-core
-	PACKAGE_iptables-zz-legacy
-	PACKAGE_fros
-	PACKAGE_fros_files
-	PACKAGE_luci-app-fros 
-"
-init_depend_package_config()
-{
-	sed -i "/CONFIG_PACKAGE_firewall4/d" .config
-        echo 'CONFIG_PACKAGE_firewall4=n' >>.config
-	for package in $DEPENDS_PACKAGES;do
-		echo "add depend package CONFIG_PACKAGE_$package"
-		sed -i "/CONFIG_$package/d" .config
-		echo "CONFIG_$package=y" >>.config
-	done
-	make defconfig
-}
+#!/bin/sh
+
+ipk_name_list="
+libfros_uci
+libfros_util
+libuci_config 
+libfros_status
+kmod-oaf
+kmod-app_delay
+portald
+kmod-portal
+appfilter
+apid
+luci-app-parent_manage
+luci-app-app_delay
+luci-app-stats
+luci-app-fros
+luci-app-portal
+luci-i18n-fros-zh-cn
+luci-i18n-portal-zh-cn
+luci-i18n-parent_manage-zh-cn"
+
+for ipk in $ipk_name_list
+do
+    find ./ -name "${ipk}*" |xargs opkg install
+done
