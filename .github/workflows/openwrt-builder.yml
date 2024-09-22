@@ -23,7 +23,7 @@ on:
 
 env:
   REPO_URL: https://github.com/bluesite-code/fros
-  REPO_BRANCH: master
+  REPO_BRANCH: main
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   DIY_P0_SH: diy-part0.sh
