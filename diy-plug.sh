@@ -17,6 +17,9 @@
 #echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
 
-# Add plug
-git clone https://github.com/sbwml/openwrt-alist.git package/openwrt-alist
+# Add alist
+rm -rf feeds/packages/lang/golang
+git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
+
+# Add mosdns
 #git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
