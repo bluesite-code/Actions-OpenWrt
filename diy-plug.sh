@@ -20,11 +20,12 @@
 # Add fros
 echo 'src-git fros https://github.com/destan19/fros-packages-openwrt.git;fros-23.05' >>feeds.conf.default
 
-#Add alist
+#Add alist&mosdns
+rm -rf feeds/packages/lang/golang
+echo 'src-git alist https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang' >> feeds.conf.default
 echo 'src-git alist https://github.com/sbwml/luci-app-alist package/alist' >> feeds.conf.default
-
-# Add mosdns
-echo 'src-git mosdns https://github.com/sbwml/luci-app-mosdns.git;v5' >> feeds.conf.default
+echo 'src-git alist https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns' >> feeds.conf.default
+echo 'src-git alist https://github.com/sbwml/v2ray-geodata package/v2ray-geodata' >> feeds.conf.default
 
 # Add theme
 #echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
