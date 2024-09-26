@@ -18,7 +18,7 @@
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
 
 # Add packages
-echo 'src-git kenzo https://github.com/kenzok8/openwrt-packages' >>feeds.conf.default
+#echo 'src-git kenzo https://github.com/kenzok8/openwrt-packages' >>feeds.conf.default
 #echo 'src-git small https://github.com/kenzok8/small' >>feeds.conf.default
 #echo 'src-git packages https://github.com/kiddin9/openwrt-packages.git' >>feeds.conf.default
 
@@ -30,6 +30,6 @@ echo 'src-git kenzo https://github.com/kenzok8/openwrt-packages' >>feeds.conf.de
 #echo 'src-git https://github.com/sbwml/v2ray-geodata package/v2ray-geodata' >> feeds.conf.default
 
 # Add theme
-echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
-cd openwrt/package
-echo 'src-git https://github.com/jerrykuku/luci-theme-argon.git' >>feeds.conf.default
+#echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
+#cd fros/package
+#echo 'src-git https://github.com/jerrykuku/luci-theme-argon.git' >>feeds.conf.default
