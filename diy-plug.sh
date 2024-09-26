@@ -17,13 +17,15 @@
 #echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
 
-# Add alist
-#rm -rf feeds/packages/lang/golang
-#git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
+# Add fros
+echo 'src-git fros https://github.com/destan19/fros-packages-openwrt.git;fros-23.05' >>feeds.conf.default
+
+#Add alist
+echo 'src-git alist https://github.com/sbwml/luci-app-alist package/alist' >> feeds.conf.default
 
 # Add mosdns
-#git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
+echo 'src-git mosdns https://github.com/sbwml/luci-app-mosdns.git;v5' >> feeds.conf.default
 
 # Add theme
-#git clone https://github.com/jerrykuku/luci-theme-argon package/luci-theme-argon
-#git clone https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git
+echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
+#echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
