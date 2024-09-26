@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # https://github.com/P3TERX/Actions-OpenWrt
-# File name: diy-part1.sh
+# File name: DIY_P1_SH
 # Description: OpenWrt DIY script part 1 (Before Update feeds)
 #
 # Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
@@ -23,3 +23,6 @@
 
 # Add mosdns
 #git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
+
+# Add theme
+#git clone https://github.com/jerrykuku/luci-theme-argon package/luci-theme-argon
