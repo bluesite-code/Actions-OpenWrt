@@ -21,6 +21,6 @@ sed -i 's/192.168.1.1/192.168.61.1/g' package/base-files/files/bin/config_genera
 #sed -i "s|root::0:0:99999:7:::|root:$password:0:0:99999:7:::|g" package/base-files/files/etc/shadow
 
 # Modify default theme
-cd lede/package/lean
-rm -rf package/lean/luci-theme-argon
-sed -i "s/luci-theme-bootstrap/luci-theme-argon/g" feeds/luci/collections/luci/Makefile
+#cd lede/package/lean
+#rm -rf package/lean/luci-theme-argon
+#sed -i "s/luci-theme-bootstrap/luci-theme-argon/g" feeds/luci/collections/luci/Makefile
