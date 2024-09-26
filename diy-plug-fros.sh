@@ -22,11 +22,11 @@ echo 'src-git kenzo https://github.com/kenzok8/openwrt-packages' >>feeds.conf.de
 echo 'src-git small https://github.com/kenzok8/small' >>feeds.conf.default
 
 #Add alist&mosdns
-rm -rf feeds/packages/lang/golang
-echo 'src-git https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang' >> feeds.conf.default
-echo 'src-git https://github.com/sbwml/luci-app-alist package/alist' >> feeds.conf.default
-echo 'src-git https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns' >> feeds.conf.default
-echo 'src-git https://github.com/sbwml/v2ray-geodata package/v2ray-geodata' >> feeds.conf.default
+#rm -rf feeds/packages/lang/golang
+#echo 'src-git https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang' >> feeds.conf.default
+#echo 'src-git https://github.com/sbwml/luci-app-alist package/alist' >> feeds.conf.default
+#echo 'src-git https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns' >> feeds.conf.default
+#echo 'src-git https://github.com/sbwml/v2ray-geodata package/v2ray-geodata' >> feeds.conf.default
 
 # Add theme
 #echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
