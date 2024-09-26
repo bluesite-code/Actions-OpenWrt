@@ -28,6 +28,6 @@ echo 'src-git https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns' >> 
 echo 'src-git https://github.com/sbwml/v2ray-geodata package/v2ray-geodata' >> feeds.conf.default
 
 # Add theme
-#echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
-#cd openwrt/package
-#echo 'src-git https://github.com/jerrykuku/luci-theme-argon.git' >>feeds.conf.default
+echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
+cd openwrt/package
+echo 'src-git https://github.com/jerrykuku/luci-theme-argon.git' >>feeds.conf.default
