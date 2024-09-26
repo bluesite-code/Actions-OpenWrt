@@ -20,6 +20,9 @@
 # Add fros
 echo 'src-git fros https://github.com/destan19/fros-packages-openwrt.git;fros-23.05' >>feeds.conf.default
 
+# Add packages
+echo 'src-git packages https://github.com/kiddin9/openwrt-packages.git' >>feeds.conf.default
+
 # Add alist&mosdns
 #rm -rf feeds/packages/lang/golang
 #echo 'src-git https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang' >> feeds.conf.default
