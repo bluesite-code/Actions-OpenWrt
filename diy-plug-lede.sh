@@ -17,8 +17,8 @@
 #echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
 #echo 'src-git packages https://github.com/kiddin9/openwrt-packages.git' >>feeds.conf.default
-sed -i '1i src-git kenzo https://github.com/kenzok8/openwrt-packages' feeds.conf.default
-sed -i '2i src-git small https://github.com/kenzok8/small' feeds.conf.default
+#sed -i '1i src-git kenzo https://github.com/kenzok8/openwrt-packages' feeds.conf.default
+#sed -i '2i src-git small https://github.com/kenzok8/small' feeds.conf.default
 
 # Add fros
 echo 'src-git fros https://github.com/destan19/fros-packages-openwrt.git;fros-23.05' >>feeds.conf.default
@@ -31,6 +31,6 @@ echo 'src-git fros https://github.com/destan19/fros-packages-openwrt.git;fros-23
 #echo 'src-git https://github.com/sbwml/v2ray-geodata package/v2ray-geodata' >> feeds.conf.default
 
 # Add theme
-echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
-cd openwrt/package
-echo 'src-git https://github.com/jerrykuku/luci-theme-argon.git' >>feeds.conf.default
+#echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
+#cd openwrt/package
+#echo 'src-git https://github.com/jerrykuku/luci-theme-argon.git' >>feeds.conf.default
