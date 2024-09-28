@@ -1,0 +1,41 @@
+#
+# https://github.com/P3TERX/Actions-OpenWrt
+#
+# File: .github/workflows/openwrt-bulder.yml
+# Description: Build OpenWrt using GitHub Actions
+#
+# Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
+#
+# This is free software, licensed under the MIT License.
+# See /LICENSE for more information.
+#
+
+name: Openwrt-official-HC5962
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+
+env:
+  REPO_URL_1: https://github.com/coolsnowwolf/lede
+  REPO_BRANCH_1: master
+  REPO_URL_2: https://github.com/bluesite-code/fros-packages-openwrt
+  REPO_BRANCH_2: fros-23.05
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+
+    - name: Clone source code
+      working-directory: /workdir
+      run: |
+        df -hT $PWD
+        git clone $REPO_URL_1 -b $REPO_BRANCH_1 openwrt
+        cd openwrt/lede
+        sudo mv fros-packages-openwrt-fros-23.05 fros
+        echo: "ok"
+        git clone $REPO_URL_2 -b $REPO_BRANCH_2 openwrt/lede/
