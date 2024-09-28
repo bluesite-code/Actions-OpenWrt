@@ -56,4 +56,6 @@ jobs:
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
         git clone $REPO_URL_2 -b $REPO_BRANCH_2
+        mv fros-packages-openwrt fros
+        cd openwrt/fros
         ls
