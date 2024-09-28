@@ -17,11 +17,12 @@ on:
   workflow_dispatch:
 
 env:
-  REPO_URL: https://github.com/bluesite-code/openwrt-fros
-  REPO_BRANCH: openwrt-23.05-fros
-  FEEDS_CONF: feeds.conf.default
+  REPO_URL_1: https://github.com/coolsnowwolf/lede
+  REPO_BRANCH_1: master
+  REPO_URL_2: https://github.com/bluesite-code/fros-packages-openwrt
+  REPO_BRANCH_2: fros-23.05
   CONFIG_FILE: .config
-  DIY_P1_SH: diy-plug-official.sh
+  DIY_P1_SH: diy-plug-lede.sh
   DIY_P2_SH: diy-config.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
@@ -54,7 +55,8 @@ jobs:
       working-directory: /workdir
       run: |
         df -hT $PWD
-        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        git clone $REPO_URL_1 -b $REPO_BRANCH_1 openwrt
+        git clone $REPO_URL_2 -b $REPO_BRANCH_2 openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         ls
 
@@ -79,13 +81,4 @@ jobs:
         chmod +x $DIY_P2_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
-
-    - name: Download package
-      id: package
-      run: |
-        cd openwrt
-        make defconfig
-        make download -j8
-        find dl -size -1024c -exec ls -l {} \;
-        find dl -size -1024c -exec rm -f {} \;
         ls
