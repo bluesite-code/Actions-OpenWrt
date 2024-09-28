@@ -55,9 +55,5 @@ jobs:
         git clone $REPO_URL_1 -b $REPO_BRANCH_1 openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
-        git clone $REPO_URL_2 -b $REPO_BRANCH_2 openwrt
+        git clone $REPO_URL_2 -b $REPO_BRANCH_2
         ls
-        cd openwrt/openwrt
-        ls
-
-    
