@@ -54,5 +54,6 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         cd openwrt/package
         git clone https://github.com/bluesite-code/fros-packages-openwrt -b fros-23.05
+        mv fros-packages-openwrt fros
         ls
         pwd
