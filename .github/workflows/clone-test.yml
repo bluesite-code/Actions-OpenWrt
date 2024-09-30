@@ -57,4 +57,4 @@ jobs:
         cd openwrt
         git clone $REPO_URL_2 -b $REPO_BRANCH_2
         mv fros-packages-openwrt fros
-        ls
+        pwd
