@@ -53,7 +53,7 @@ jobs:
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
-        git clone -b https://github.com/bluesite-code/fros-packages-openwrt
+        git clone -b https://github.com/bluesite-code/fros-packages-openwrt openwrt
         mv fros-packages-openwrt-fros-23.05 fros
         pwd
         ls
