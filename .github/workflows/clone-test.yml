@@ -17,8 +17,9 @@ on:
   workflow_dispatch:
 
 env:
-  REPO_URL: https://github.com/bluesite-code/fros-packages-openwrt
-  REPO_BRANCH: fros-23.05
+  REPO_URL: https://github.com/immortalwrt/immortalwrt
+  REPO_BRANCH: master
+  FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   DIY_P1_SH: diy-plug-lede.sh
   DIY_P2_SH: diy-config.sh
@@ -59,6 +60,6 @@ jobs:
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
         chmod +x $DIY_P2_SH
         cd openwrt
-        git clone -b https://github.com/bluesite-code/fros-packages-openwrt
+        git clone -b https://github.com/bluesite-code/fros-packages-openwrt package
         mv fros-packages-openwrt-fros-23.05 fros
         ls
