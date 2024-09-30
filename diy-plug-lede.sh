@@ -21,7 +21,10 @@
 #sed -i '2i src-git small https://github.com/kenzok8/small' feeds.conf.default
 
 # Add fros
-#echo 'src-git fros https://github.com/destan19/fros-packages-openwrt.git;fros-23.05' >>feeds.conf.default
+cd openwrt
+git clone https://github.com/bluesite-code/fros-packages-openwrt.git
+mv fros-packages-openwrt-fros-23.05 fros
+ls
 
 # Add alist&mosdns
 #rm -rf feeds/packages/lang/golang
