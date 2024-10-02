@@ -67,7 +67,7 @@ jobs:
         cd fros
         pwd
         ls
-        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        cd workdir/openwrt
         pwd
         ls
         
