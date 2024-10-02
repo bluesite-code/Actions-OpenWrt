@@ -60,6 +60,14 @@ jobs:
     - name: Clone application code
       run: |   
         cd openwrt/package
-        git clone https://github.com/destan19/fros-packages-openwrt -b fros-23.05
+        git clone https://github.com/bluesite-code/fros-packages-openwrt -b fros-23.05
+        mv fros-packages-openwrt fros
         pwd
         ls
+        cd fros
+        pwd
+        ls
+        cd openwrt
+        pwd
+        ls
+        
