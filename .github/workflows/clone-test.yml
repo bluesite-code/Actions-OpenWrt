@@ -64,5 +64,5 @@ jobs:
         $GITHUB_WORKSPACE/$DIY_P1_SH
         pwd
         ls
-        cd packges
+        cd package
         ls
