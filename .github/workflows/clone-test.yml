@@ -64,6 +64,6 @@ jobs:
         mv fros-packages-openwrt fros
         ls
         pwd
-        cd openwrt/package/fros
+        cd fros
         ls
         pwd
