@@ -10,7 +10,7 @@
 # See /LICENSE for more information.
 #
 
-name: Openwrt-official-HC5962
+name: OpenWrt Builder
 
 on:
   repository_dispatch:
@@ -55,7 +55,7 @@ jobs:
       run: |
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt=
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
     - name: Load custom feeds
       run: |
