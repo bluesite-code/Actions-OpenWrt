@@ -67,3 +67,6 @@ jobs:
         cd package
         pwd
         ls
+        cd fros
+        pwd
+        ls
