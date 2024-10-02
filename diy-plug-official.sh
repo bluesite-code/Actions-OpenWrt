@@ -14,7 +14,7 @@
 #sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
 
 # Add fros
-git clone https://github.com/bluesite-code/fros -b fros-23.05 package
+git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
 
 # Add alist&mosdns
 #rm -rf feeds/packages/lang/golang
