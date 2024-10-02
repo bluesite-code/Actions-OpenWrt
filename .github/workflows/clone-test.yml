@@ -55,19 +55,6 @@ jobs:
       run: |
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
+        pwd
+        ls
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
-    
-    - name: Clone application code
-      run: |   
-        cd openwrt/package
-        git clone https://github.com/bluesite-code/fros-packages-openwrt -b fros-23.05
-        mv fros-packages-openwrt fros
-        pwd
-        ls
-        cd fros
-        pwd
-        ls
-        cd workdir/openwrt
-        pwd
-        ls
-        
