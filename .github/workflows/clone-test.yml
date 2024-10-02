@@ -58,5 +58,7 @@ jobs:
 
     - name: Clone application code
       run: |   
-        cd openwrt/package
+        cd openwrt
+        ls
+        cd package
         ls
