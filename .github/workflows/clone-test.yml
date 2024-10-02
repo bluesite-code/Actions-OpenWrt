@@ -65,4 +65,5 @@ jobs:
         pwd
         ls
         cd package
+        pwd
         ls
