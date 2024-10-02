@@ -64,6 +64,12 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
+    - name: Clone application code
+      run: |   
+        cd openwrt/package
+        git clone https://github.com/bluesite-code/fros-packages-openwrt -b fros-23.05
+        mv fros-packages-openwrt fros
+
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
 
