@@ -17,11 +17,11 @@ on:
   workflow_dispatch:
 
 env:
-  REPO_URL: https://github.com/bluesite-code/openwrt-fros
-  REPO_BRANCH: openwrt-23.05-fros
+  REPO_URL: https://github.com/destan19/openwrt-fros
+  REPO_BRANCH: fros-23.05
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
-  DIY_P1_SH: diy-plug-official.sh
+  DIY_P1_SH: diy-plug-fros.sh
   DIY_P2_SH: diy-config.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
