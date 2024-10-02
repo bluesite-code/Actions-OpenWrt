@@ -29,5 +29,5 @@ git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
 
 # Add theme
 #echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
-#cd fros/package
-#echo 'src-git https://github.com/jerrykuku/luci-theme-argon.git' >>feeds.conf.default
+#cd openwrt/package
+#git clone https://github.com/jerrykuku/luci-theme-argon.git
