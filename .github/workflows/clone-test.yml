@@ -63,6 +63,3 @@ jobs:
         git clone https://github.com/bluesite-code/fros-packages-openwrt -b fros-23.05
         pwd
         ls
-        cd fros
-        pwd
-        ls
