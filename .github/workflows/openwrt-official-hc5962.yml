@@ -57,12 +57,6 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
-    - name: Clone application code
-      run: |   
-        cd openwrt/package
-        git clone https://github.com/bluesite-code/fros -b fros-23.05
-        mv fros-fros-23.05 fros  
-
     - name: Load custom feeds
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
