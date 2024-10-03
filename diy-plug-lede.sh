@@ -23,4 +23,3 @@ sed -i '1i src-git haibo https://github.com/haiibo/openwrt-packages' feeds.conf.
 
 # Add theme
 #echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
-#git clone https://github.com/jerrykuku/luci-theme-argon.git
