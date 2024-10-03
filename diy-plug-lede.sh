@@ -21,6 +21,9 @@
 #sed -i '2i src-git small https://github.com/kenzok8/small' feeds.conf.default
 sed -i '1i src-git haibo https://github.com/haiibo/openwrt-packages' feeds.conf.default
 
+# Add fros
+git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
+
 # Add alist&mosdns
 rm -rf feeds/packages/lang/golang
 git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
