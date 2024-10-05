@@ -27,7 +27,7 @@ sed -i '2i src-git small https://github.com/kenzok8/small' feeds.conf.default
 # Add alist&mosdns
 rm -rf feeds/packages/lang/golang
 git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
-git clone https://github.com/sbwml/luci-app-alist package/alist
+#git clone https://github.com/sbwml/luci-app-alist package/alist
 git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
 rm -rf feeds/packages/net/v2ray-geodata
 git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
