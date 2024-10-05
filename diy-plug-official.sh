@@ -17,9 +17,9 @@
 #echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
 #echo 'src-git packages https://github.com/kiddin9/openwrt-packages.git' >>feeds.conf.default
-#sed -i '1i src-git kenzo https://github.com/kenzok8/small-package' feeds.conf.default
-#sed -i '2i src-git small https://github.com/kenzok8/small' feeds.conf.default
-sed -i '1i src-git haibo https://github.com/haiibo/openwrt-packages' feeds.conf.default
+sed -i '1i src-git kenzo https://github.com/kenzok8/small-package' feeds.conf.default
+sed -i '2i src-git small https://github.com/kenzok8/small' feeds.conf.default
+#sed -i '1i src-git haibo https://github.com/haiibo/openwrt-packages' feeds.conf.default
 
 # Add fros
 #git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
