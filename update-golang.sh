@@ -29,8 +29,8 @@ log_stdin() {
 
 # defaults
 release_list=https://go.dev/dl/
-source=https://storage.googleapis.com/golang
-#source=https://dl.google.com/go
+#source=https://storage.googleapis.com/golang
+source=https://dl.google.com/go
 #source=https://go.dev/dl
 #source=https://mirrors.ustc.edu.cn/golang/
 destination=/usr/local
