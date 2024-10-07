@@ -87,10 +87,8 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
-    - name: Golang-version-checker
+    - name: Download&Install Golang
       run: |
-        lsb_release -a
-        echo "####################################################"
         sudo rm -rf /usr/local/go
         sudo apt-get remove golang
         sudo apt-get remove golang-go
@@ -98,6 +96,11 @@ jobs:
         wget https://dl.google.com/go/go1.23.2.linux-amd64.tar.gz
         sudo tar -xvf go1.23.2.linux-amd64.tar.gz -C /usr/local
         export PATH=$PATH:/usr/local/go/bin
+
+    - name: Golang-version-checker
+      run: |
+        lsb_release -a
+        echo "####################################################"
         go version
         pwd
 
