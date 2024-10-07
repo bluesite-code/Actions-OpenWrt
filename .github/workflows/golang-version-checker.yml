@@ -51,7 +51,6 @@ jobs:
         sudo chown $USER:$GROUPS /workdir
 
     - name: Update golang
-      working-directory: /workdir
       run:
         chmod a+x $UPDATE_GOLANG
 
