@@ -92,6 +92,7 @@ jobs:
         lsb_release -a
         echo "####################################################"
         go version
+        pwd
         echo "####################################################"
         cat /proc/version
 
@@ -99,4 +100,4 @@ jobs:
       uses: Mattraks/delete-workflow-runs@main
       with:
         retain_days: 0
-        keep_minimum_runs: 0
+        keep_minimum_runs: 3
