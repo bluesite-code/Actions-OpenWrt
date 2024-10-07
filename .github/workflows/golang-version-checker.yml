@@ -51,8 +51,8 @@ jobs:
         sudo chown $USER:$GROUPS /workdir
 
     - name: Update golang
-      run: |
-        sudochmod +x $UPDATE_GOLANG
+      run:
+        sudo ./update-golang.sh
 
     - name: Golang-version-checker
       run: |
