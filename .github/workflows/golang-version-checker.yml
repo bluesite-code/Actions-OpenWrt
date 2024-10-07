@@ -51,7 +51,7 @@ jobs:
 
     - name: Update golang
       run:
-        sudo ./update-golang.sh
+        sudo update-golang.sh
 
     - name: Golang-version-checker
       run: |
