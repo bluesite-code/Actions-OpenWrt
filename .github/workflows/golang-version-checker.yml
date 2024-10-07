@@ -10,7 +10,7 @@
 # See /LICENSE for more information.
 #
 
-name: Golong-version-Checker
+name: Golang-version-Checker
 
 on:
   repository_dispatch:
@@ -87,7 +87,7 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
-    - name: Golong-version-checker
+    - name: Golang-version-checker
       run: |
         lsb_release -a
         echo "####################################################"
