@@ -71,7 +71,8 @@ jobs:
        
     - name: Golang-version-check
       run: |
-        pwd
+        docker images
+        echo"----------------------------------------"
         go version
 
     - name: Delete workflow runs
