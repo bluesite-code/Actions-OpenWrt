@@ -78,8 +78,6 @@ jobs:
 
     - name: Golang-version-checker
       run: |
-        lsb_release -a
-        echo "####################################################"
         go version
         pwd
 
