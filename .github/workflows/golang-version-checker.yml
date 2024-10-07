@@ -57,30 +57,17 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
-    - name: Load custom feeds
-      run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
-        chmod +x $DIY_P1_SH
-        cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P1_SH
-
     - name: Update golang
       run: |
         git clone https://github.com/udhos/update-golang
         cd update-golang
         sudo ./update-golang.sh
+        export PATH=PATH:/usr/local/go/bin
 
-    - name: Update feeds
-      run: cd openwrt && ./scripts/feeds update -a
-
-    - name: Install feeds
-      run: cd openwrt && ./scripts/feeds install -a
-
-    - name: Golang-version-checker
+    - name: Golang-version-check
       run: |
         cd openwrt
         go version
-        pwd
 
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@main
