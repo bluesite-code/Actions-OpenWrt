@@ -51,10 +51,8 @@ jobs:
         sudo chown $USER:$GROUPS /workdir
 
     - name: Update golang
+      working-directory: /workdir
       run: |
-        pwd
-        ls
-        echo "####################################################"
         git clone https://github.com/udhos/update-golang
         cd update-golang
         sudo update-golang.sh
