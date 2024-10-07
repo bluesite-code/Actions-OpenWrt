@@ -58,18 +58,18 @@ jobs:
 
     - name: Update golang
       run: |
-        sudo rm -rf /usr/local/go
+        sudo rm -rvf /usr/local/go/
         sudo apt-get remove golang
         sudo apt-get remove golang-go
         sudo apt-get autoremove
-        git clone https://github.com/udhos/update-golang
-        cd update-golang
-        sudo ./update-golang.sh
-        export PATH=PATH:/usr/local/go/bin
-
+        sudo wget https://go.dev/dl/go1.23.2.linux-amd64.tar.gz
+        sudo tar -xvf go1.23.2.linux-amd64.tar.gz -C /usr/local
+        sudo mv go /usr/local
+        sudo echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+       
     - name: Golang-version-check
       run: |
-        cd openwrt
+        pwd
         go version
 
     - name: Delete workflow runs
