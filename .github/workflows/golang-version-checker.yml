@@ -68,11 +68,11 @@ jobs:
         sudo echo "export PATH=\$PATH:/usr/local/go/bin" >> ~/.profile
         sudo echo "export GOPATH=\$HOME/go" >> ~/.profile
         source ~/.profile
+        source ~/.bashrc
        
     - name: Golang-version-check
       run: |
         docker images
-        echo"----------------------------------------"
         go version
 
     - name: Delete workflow runs
