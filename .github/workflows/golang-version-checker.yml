@@ -65,6 +65,9 @@ jobs:
         sudo wget https://go.dev/dl/go1.23.2.linux-amd64.tar.gz
         sudo tar -xvf go1.23.2.linux-amd64.tar.gz -C /usr/local
         sudo echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+        sudo echo "export PATH=\$PATH:/usr/local/go/bin" >> ~/.profile
+        sudo echo "export GOPATH=\$HOME/go" >> ~/.profile
+        source ~/.profile
        
     - name: Golang-version-check
       run: |
