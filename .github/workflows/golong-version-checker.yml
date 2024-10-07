@@ -89,4 +89,9 @@ jobs:
 
     - name: Golong-version-checker
       run: |
-      ls
+       pwd
+	  	 echo "####################################################"
+	     go version
+		   echo "####################################################"
+		   cd feeds/packages/lang/golang
+		   ls
