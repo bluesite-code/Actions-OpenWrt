@@ -51,9 +51,10 @@ jobs:
         sudo chown $USER:$GROUPS /workdir
 
     - name: Update golang
-      run:
-        chmod a+x $UPDATE_GOLANG
-        $GITHUB_WORKSPACE/$UPDATE_GOLANG
+      run: |
+        git clone https://github.com/udhos/update-golang
+        cd update-golang
+        sudo ./update-golang.sh
 
     - name: Golang-version-checker
       run: |
