@@ -53,6 +53,7 @@ jobs:
     - name: Update golang
       run:
         chmod a+x $UPDATE_GOLANG
+        $GITHUB_WORKSPACE/$UPDATE_GOLANG
 
     - name: Golang-version-checker
       run: |
