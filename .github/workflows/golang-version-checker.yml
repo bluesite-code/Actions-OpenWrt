@@ -78,6 +78,7 @@ jobs:
 
     - name: Golang-version-checker
       run: |
+        cd openwrt
         go version
         pwd
 
