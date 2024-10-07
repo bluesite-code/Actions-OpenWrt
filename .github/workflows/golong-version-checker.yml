@@ -30,7 +30,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout
@@ -89,9 +89,14 @@ jobs:
 
     - name: Golong-version-checker
       run: |
-        pwd
+        lsb_release -a
+        echo "####################################################"
+        cat /etc/openwrt_release
         echo "####################################################"
         go version
-        echo "####################################################"
-        cd feeds/packages/lang/golang
-        ls
+
+    - name: Delete workflow runs
+      uses: Mattraks/delete-workflow-runs@main
+      with:
+        retain_days: 0
+        keep_minimum_runs: 2
