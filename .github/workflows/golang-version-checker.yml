@@ -52,8 +52,7 @@ jobs:
 
     - name: Update golang
       run: |
-        chmod +x $UPDATE_GOLANG
-        $GITHUB_WORKSPACE/$UPDATE_GOLANG
+        sudochmod +x $UPDATE_GOLANG
 
     - name: Golang-version-checker
       run: |
