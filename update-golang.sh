@@ -30,8 +30,8 @@ log_stdin() {
 # defaults
 release_list=https://go.dev/dl/
 #source=https://storage.googleapis.com/golang
-source=https://dl.google.com/go
-#source=https://go.dev/dl
+#source=https://dl.google.com/go
+source=https://go.dev/dl
 #source=https://mirrors.ustc.edu.cn/golang/
 destination=/usr/local
 release=1.23.2 ;# just the default. the script detects the latest available release.
