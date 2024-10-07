@@ -23,6 +23,7 @@ env:
   CONFIG_FILE: .config
   DIY_P1_SH: diy-plug-official.sh
   DIY_P2_SH: diy-config.sh
+  UPDATE_GOLANG: update-golang.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
@@ -87,15 +88,10 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
-    - name: Download&Install Golang
+    - name: Update golang
       run: |
-        sudo rm -rf /usr/local/go
-        sudo apt-get remove golang
-        sudo apt-get remove golang-go
-        sudo apt-get autoremove
-        wget https://dl.google.com/go/go1.23.2.linux-amd64.tar.gz
-        sudo tar -xvf go1.23.2.linux-amd64.tar.gz -C /usr/local
-        export PATH=$PATH:/usr/local/go/bin
+        chmod +x $UPDATE_GOLANG
+        $GITHUB_WORKSPACE/$UPDATE_GOLANG
 
     - name: Golang-version-checker
       run: |
