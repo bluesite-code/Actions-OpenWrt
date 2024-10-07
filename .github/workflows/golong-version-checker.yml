@@ -90,4 +90,4 @@ jobs:
     - name: Golong-version-checker
       run: |
         pwd
-	go version
+	cat /etc/openwrt_release
