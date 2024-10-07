@@ -94,9 +94,6 @@ jobs:
         go version
         echo "####################################################"
         cat /proc/version
-        echo "####################################################"
-        cd ~
-        cat /etc/openwrt_release
 
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@main
