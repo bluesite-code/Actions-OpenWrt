@@ -10,7 +10,7 @@
 # See /LICENSE for more information.
 #
 
-name: Update-golang-version
+name: Update-golang-test
 
 on:
   repository_dispatch:
