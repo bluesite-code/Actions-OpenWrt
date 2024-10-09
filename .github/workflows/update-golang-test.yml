@@ -49,7 +49,6 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
-    - name: Set up Go
     - uses: actions/checkout@v4
     - uses: actions/setup-go@v5
       with:
