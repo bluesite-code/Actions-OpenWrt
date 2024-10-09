@@ -49,8 +49,11 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
-    - uses: actions/checkout@v4
-    - uses: actions/setup-go@v5
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
       with:
         go-version: '1.23.2'
-    - run: go version
+      run: go version
