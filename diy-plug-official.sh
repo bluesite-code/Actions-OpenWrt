@@ -35,7 +35,7 @@ git clone https://github.com/sbwml/luci-app-alist package/alist
 # Add other
 git clone https://github.com/sirpdboy/luci-app-advanced package/luci-app-advanced
 git clone https://github.com/wangqn/luci-app-filebrowser package/luci-app-filebrowser
-git clone https://github.com/wangqn/luci-app-filebrowser package/luci-app-filebrowser
+git clone https://github.com/kenzok78/luci-app-fileassistant package/luci-app-fileassistant
 
 # Add theme
 #echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
