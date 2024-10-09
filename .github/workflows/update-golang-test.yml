@@ -48,10 +48,23 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
+        pwd
 
-    - uses: actions/checkout@v4
-    - uses: actions/setup-go@v5
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      working-directory: /workdir
+      uses: actions/setup-go@v5
       with:
         go-version: '1.23.2'
-        check-latest: true
-    - run: go run hello.go
+        
+    - name: Check version
+      run: 
+        go run hello.go
+
+    - name: Delete workflow runs
+      uses: Mattraks/delete-workflow-runs@main
+      with:
+        retain_days: 0
+        keep_minimum_runs: 3
