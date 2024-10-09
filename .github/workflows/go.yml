@@ -28,3 +28,4 @@ jobs:
       run: go test -v ./...
 
     - name: Checkout update version
+      run: go run hello.go
