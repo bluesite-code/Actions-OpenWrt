@@ -50,18 +50,19 @@ jobs:
         sudo chown $USER:$GROUPS /workdir
         pwd
 
-    - name: Check out code into the Go module directory
+    - name: Checkout repository
       uses: actions/checkout@v4
-
-    - name: Set up Go
-      working-directory: /workdir
+      with:
+        ref: ${{ github.ref }}
+    - name: Setup Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.23.2'
+        go-version: '1.18'
+        working-directory: ./worker
         
     - name: Check version
       run: 
-        go run hello.go
+        go version
 
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@main
