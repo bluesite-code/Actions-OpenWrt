@@ -62,8 +62,7 @@ jobs:
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
        
     - name: Golang-version-check
-      run: |
-        pwd
+      run:
         go version
 
     - name: Delete workflow runs
