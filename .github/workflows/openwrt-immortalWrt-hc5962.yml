@@ -48,7 +48,12 @@ jobs:
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
-        sudo chown $USER:$GROUPS /workdir
+        sudo chown $USER:$GROUPS /
+        
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.23.2
 
     - name: Clone source code
       working-directory: /workdir
