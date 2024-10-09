@@ -50,16 +50,20 @@ jobs:
         sudo chown $USER:$GROUPS /workdir
         pwd
 
-    - name: Checkout repository
+    - name: Checkout Code
       uses: actions/checkout@v4
-      with:
-        ref: ${{ github.ref }}
+ 
     - name: Setup Go
       uses: actions/setup-go@v5
       with:
         go-version: '1.23.2'
-        working-directory: ./workdir
-        
+ 
+    - name: Test
+      run: go test ./...
+ 
+    - name: Build
+      run: go build
+
     - name: Check version
       run: 
         go version
