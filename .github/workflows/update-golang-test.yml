@@ -48,6 +48,7 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
+        pwd
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v4
@@ -56,4 +57,4 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.23.2'
-      run: go version
+        run: go version
