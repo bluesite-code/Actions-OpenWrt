@@ -51,7 +51,7 @@ jobs:
         check-latest: true
 
     - name: Create mod cache directory
-      run: mkdir -p /home/runner/go/pkg/mod
+      run: sudo mkdir -p /home/runner/go/pkg/mod
 
     - name: Cache modules
       uses: actions/cache@v2
