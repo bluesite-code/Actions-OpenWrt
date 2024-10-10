@@ -45,8 +45,7 @@ jobs:
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
     - uses: actions/checkout@v4
-    - uses: actions/setup-go@v5
-        with:
-          go-version: '>=1.23.2'
-          cache-dependency-path: "**/go.sum"
-    - run: go version
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version:  '1.23.2'
