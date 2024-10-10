@@ -6,16 +6,10 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go-version: [ '1.22.8', '1.23.1', '1.23.2']
-
+  
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version }}
-      # You can test your matrix by printing the current Go version
-      - name: Display Go version
-        run: go version
+          go-version: '>=1.22.8'
+      - run: go version
