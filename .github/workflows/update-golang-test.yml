@@ -1,3 +1,15 @@
+#
+# https://github.com/P3TERX/Actions-OpenWrt
+#
+# File: .github/workflows/openwrt-bulder.yml
+# Description: Build OpenWrt using GitHub Actions
+#
+# Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
+#
+# This is free software, licensed under the MIT License.
+# See /LICENSE for more information.
+#
+
 name: Update-golang-test
 
 on:
@@ -24,6 +36,12 @@ jobs:
     - name: Checkout
       uses: actions/checkout@main
 
+    - name: Checkout&Setup go
+      uses: actions/checkout@v4
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23.2'
+
     - name: Initialization environment
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -31,6 +49,7 @@ jobs:
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
         sudo docker image prune --all --force
         sudo -E apt-get -qq update
+        sudo -E apt-get -qq install ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
@@ -44,26 +63,42 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
-    - uses: actions/checkout@v4
-    - uses: actions/setup-go@v5
-      with:
-        go-version: '1.23.2'
-        check-latest: true
+    - name: Load custom feeds
+      run: |
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
+        chmod +x $DIY_P1_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P1_SH
 
-    - name: Create mod cache directory
-      run: sudo mkdir -p /home/runner/go/pkg/mod
+    - name: Update feeds
+      run: cd openwrt && ./scripts/feeds update -a
 
-    - name: Cache modules
-      uses: actions/cache@v2
-      with:
-        path: /home/runner/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-          
+    - name: Install feeds
+      run: cd openwrt && ./scripts/feeds install -a
+
+    - name: Load custom configuration
+      run: |
+        [ -e files ] && mv files openwrt/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        chmod +x $DIY_P2_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P2_SH
+
+    - name: Download package
+      id: package
+      run: |
+        cd openwrt
+        make defconfig
+        make download -j8
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -f {} \;
+
+    - name: Check golang version
+      run:
+        go version
+
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@main
       with:
         retain_days: 0
         keep_minimum_runs: 3
-    
