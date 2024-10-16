@@ -34,8 +34,8 @@ git clone https://github.com/sbwml/luci-app-alist package/alist
 find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/lang\/golang\/golang-package.mk/$(TOPDIR)\/feeds\/packages\/lang\/golang\/golang-package.mk/g' {}
 
 # Add other
-git clone https://github.com/sirpdboy/luci-app-advanced package/luci-app-advanced
-git clone https://github.com/wangqn/luci-app-filebrowser package/luci-app-filebrowser
+#git clone https://github.com/sirpdboy/luci-app-advanced package/luci-app-advanced
+#git clone https://github.com/wangqn/luci-app-filebrowser package/luci-app-filebrowser
 git clone https://github.com/kenzok78/luci-app-fileassistant package/luci-app-fileassistant
 
 # Add theme
