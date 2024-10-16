@@ -34,10 +34,11 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - uses: actions/setup-go@v5
+    - name: Checkout
+      uses: actions/checkout@main
+
+    - name: Setup go
+      uses: actions/setup-go@v5
       with:
         go-version: ${{ env.GO_VERSION }}
 
