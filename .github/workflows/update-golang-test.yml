@@ -31,6 +31,10 @@ env:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        arch:
+          - mips_24kc
 
     steps:
     - name: Checkout
@@ -40,6 +44,8 @@ jobs:
 
     - name: Setup go
       uses: bluesite-code/openwrt-gh-action-sdk@go1.23
+      env:
+        ARCH: ${{ matrix.arch }}-openwrt-22.05
 
     - name: Initialization environment
       env:
