@@ -17,7 +17,6 @@ on:
   workflow_dispatch:
 
 env:
-  GO_VERSION: '1.23'
   REPO_URL: https://github.com/openwrt/openwrt
   REPO_BRANCH: v23.05.2
   FEEDS_CONF: feeds.conf.default
@@ -35,12 +34,10 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@main
+      uses: actions/checkout@v4
 
     - name: Setup go
-      uses: actions/setup-go@v5
-      with:
-        go-version: ${{ env.GO_VERSION }}
+      uses: bluesite-code/openwrt-gh-action-sdk@go1.23
 
     - name: Initialization environment
       env:
