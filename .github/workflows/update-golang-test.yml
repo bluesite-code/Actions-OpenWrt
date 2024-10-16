@@ -31,11 +31,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        arch:
-          - mips_24kc
-
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -43,9 +38,7 @@ jobs:
         fetch-depth: 0
 
     - name: Setup go
-      uses: ./gh-action-sdk@go1.23
-      env:
-        ARCH: ${{ matrix.arch }}-openwrt-22.05
+      uses: actions/setup-go@v5
 
     - name: Initialization environment
       env:
