@@ -11,25 +11,8 @@ jobs:
     steps:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4
-  
-      - name: Set up Go
+
+      - name: install Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.22.x
-          cache: true
-    
-      - name: Create mod cache directory
-        run: mkdir -p /home/runner/go/pkg/mod
-    
-      - name: Cache modules
-        uses: actions/cache@v2
-        with:
-          path: /home/runner/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-      - name: Build
-        run: go build -v ./...
-    
-      - name: Test
-        run: go test -v ./...
+          go-version-file: go.mod
