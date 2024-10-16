@@ -43,7 +43,7 @@ jobs:
         fetch-depth: 0
 
     - name: Setup go
-      uses: openwrtorg/openwrt-gh-action-sdk@go1.23
+      uses: openwrt/gh-action-sdk@go1.23
       env:
         ARCH: ${{ matrix.arch }}-openwrt-22.05
 
