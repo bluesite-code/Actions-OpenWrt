@@ -34,7 +34,9 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@main
+      with:
+        fetch-depth: 0
 
     - name: Setup go
       uses: bluesite-code/openwrt-gh-action-sdk@go1.23
