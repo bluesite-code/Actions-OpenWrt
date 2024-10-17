@@ -78,8 +78,9 @@ jobs:
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
     - name: Check golang version
-      run:
+      run: |
         go version
+        pws
 
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@main
