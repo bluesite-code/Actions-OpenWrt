@@ -113,8 +113,7 @@ jobs:
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
-        sudo find openwrt/bin/targets/ -type d -exec chmod +x {} \;
-        sudo rm -rf packages
+        [ -d "openwrt/bin/targets/*/*" ] && rm -rf openwrt/bin/targets/*/*/packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
