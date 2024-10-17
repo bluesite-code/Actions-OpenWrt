@@ -30,11 +30,13 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
     - name: Checkout
       uses: actions/checkout@main
+      with:
+          fetch-depth: 0
 
     - name: Initialization environment
       env:
@@ -113,10 +115,19 @@ jobs:
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
-        shopt -s extglob
-        cd openwrt/bin/targets/*/*
-        rm -rf packages
-        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        cd openwrt/bin/targets/*/*  
+        rm -rf packages && mkdir packages  
+        find -name "*esxi-flat.vmdk*" | xargs -i mv -f {} packages  
+        find -name "*kernel.bin*" | xargs -i mv -f {} packages  
+        find -name "*rootfs*" | xargs -i mv -f {} packages  
+        find -name "*.manifest*" | xargs -i mv -f {} packages  
+        find -name "*vmlinuz*" | xargs -i mv -f {} packages  
+        find -name "*esxi.vmdk*" | xargs -i mv -f {} packages  
+        find -name "*buildinfo*" | xargs -i mv -f {} packages  
+        find -name "*json*" | xargs -i mv -f {} packages  
+        find -name "*sha256sums*" | xargs -i mv -f {} packages  
+        rm -rf packages  
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV  
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Upload firmware directory
