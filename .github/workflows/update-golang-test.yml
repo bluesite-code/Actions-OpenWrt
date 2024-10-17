@@ -80,7 +80,7 @@ jobs:
     - name: Check golang version
       run: |
         go version
-        pws
+        pwd
 
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@main
