@@ -18,7 +18,7 @@ on:
 
 env:
   REPO_URL: https://github.com/openwrt/openwrt
-  REPO_BRANCH: v23.05.2
+  REPO_BRANCH: v23.05.5
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   DIY_P1_SH: diy-plug-official.sh
@@ -78,9 +78,8 @@ jobs:
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
     - name: Check golang version
-      run: |
+      run: 
         go version
-        pwd
 
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@main
