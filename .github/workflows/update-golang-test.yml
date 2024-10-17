@@ -17,7 +17,6 @@ on:
   workflow_dispatch:
 
 env:
-  GO_VERSION: '1.23'
   REPO_URL: https://github.com/openwrt/openwrt
   REPO_BRANCH: v23.05.2
   FEEDS_CONF: feeds.conf.default
@@ -34,20 +33,9 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - uses: actions/setup-go@v5
-      with:
-        go-version: ${{ env.GO_VERSION }}
-
-    - name: Update go.mod with new Go version
-      run: |
-        sed -i 's/go 1\.[0-9]\+/go 1.23/' go.mod
-        git add go.mod
-        git commit -m "Update go.mod to Go version 1.23"
-        git push
-
+    - name: Checkout
+      uses: actions/checkout@main
+      
     - name: Initialization environment
       env:
         DEBIAN_FRONTEND: noninteractive
