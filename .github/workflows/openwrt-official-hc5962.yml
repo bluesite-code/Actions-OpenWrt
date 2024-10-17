@@ -113,7 +113,6 @@ jobs:
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
-        #修改权限，cd换成chmod +x，rm前加上sudo
         sudo find openwrt/bin/targets/ -type d -exec chmod +x {} \;
         sudo rm -rf packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
