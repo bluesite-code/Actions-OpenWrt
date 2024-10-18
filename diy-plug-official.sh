@@ -26,6 +26,7 @@ git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
 
 # Update go.mod file
 #echo "module $(go list -m)" > go.mod && go mod edit -go 1.23.2
+#go mod tidy
 
 # Add alist&mosdns
 rm -rf feeds/packages/lang/golang
