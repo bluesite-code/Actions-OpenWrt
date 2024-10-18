@@ -24,6 +24,9 @@
 # Add fros
 git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
 
+# Update go.mod file
+#echo "module $(go list -m)" > go.mod && go mod edit -go 1.23.2
+
 # Add alist&mosdns
 rm -rf feeds/packages/lang/golang
 rm -rf feeds/packages/net/v2ray-geodata
