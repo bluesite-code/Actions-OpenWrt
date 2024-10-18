@@ -50,11 +50,12 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
+    # There will be a warning message：Restore cache failed...Supported file pattern: go.sum
     - name: Setup Go
       uses: actions/setup-go@v5
       with:
         go-version: 1.23.2
- 
+
     - name: Update go.mod file
       run: |
         echo "module $(go list -m)" > go.mod
