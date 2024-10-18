@@ -53,6 +53,13 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
+    - name: Update go.mod file
+      run: |
+        echo "module $(go list -m)" > go.mod
+        go mod edit -go 1.23
+        go mod tidy
+        go mod vendor
+   
     - name: Clone source code
       working-directory: /workdir
       run: |
@@ -81,12 +88,6 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
-    - name: Update go.mod file
-      run: |
-        echo "module $(go list -m)" > go.mod
-        go mod edit -go 1.23
-        go mod tidy
-
     - name: Download package
       id: package
       run: |
@@ -97,7 +98,8 @@ jobs:
         find dl -size -1024c -exec rm -f {} \;
         
     - name: Check golang version
-      run: 
+      run: | 
+        go version
         go env
 
     - name: Delete workflow runs
