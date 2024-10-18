@@ -79,7 +79,7 @@ jobs:
     - name: Check golang version
       run: |
         go version
-        echo'======================'
+        echo: '======================'
         go env
 
     - name: Delete workflow runs
