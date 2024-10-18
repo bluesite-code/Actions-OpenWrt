@@ -93,6 +93,7 @@ jobs:
         echo "module $(go list -m)" > go.mod
         go mod edit -go 1.23
         go mod tidy
+        go mod vendor
 
     - name: Compile the firmware
       id: compile
