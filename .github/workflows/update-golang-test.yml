@@ -54,7 +54,7 @@ jobs:
     - name: Check golang version
       run: | 
         go version
-        apt list --installed | grep golang
+     
         
 
     - name: Delete workflow runs
