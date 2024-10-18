@@ -39,9 +39,7 @@ jobs:
     - name: Setup golang 
       uses: actions/setup-go@v5
       with:
-        go-version-file: 'path/to/go.mod'
-      run: go version
-      
+        go-version-file: 'path/to/go.mod'      
       
     - name: Initialization environment
       env:
