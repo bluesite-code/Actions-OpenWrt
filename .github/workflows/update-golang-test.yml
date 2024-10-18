@@ -81,6 +81,7 @@ jobs:
     - name: Check golang version
       run: 
         go version
+        go env
 
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@main
