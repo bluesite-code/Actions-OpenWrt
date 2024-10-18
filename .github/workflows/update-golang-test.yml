@@ -78,7 +78,8 @@ jobs:
 
     - name: Check golang version
       run: |
-        go version
+        go get go@1.23.2
+        go get toolchain@go1.23.2
         go env
 
     - name: Delete workflow runs
