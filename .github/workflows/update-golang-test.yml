@@ -55,6 +55,7 @@ jobs:
       run: | 
         go version
         go env
+        pwd
 
     - name: Delete workflow runs
       uses: Mattraks/delete-workflow-runs@main
