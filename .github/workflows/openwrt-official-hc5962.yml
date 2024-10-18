@@ -18,7 +18,7 @@ on:
 
 env:
   REPO_URL: https://github.com/openwrt/openwrt
-  REPO_BRANCH: v23.05.5
+  REPO_BRANCH: v23.05.4
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   DIY_P1_SH: diy-plug-official.sh
@@ -34,7 +34,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@main
 
     - name: Initialization environment
       env:
@@ -93,7 +93,6 @@ jobs:
         echo "module $(go list -m)" > go.mod
         go mod edit -go 1.23
         go mod tidy
-        go mod vendor
 
     - name: Compile the firmware
       id: compile
