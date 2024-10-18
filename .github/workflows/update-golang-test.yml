@@ -78,10 +78,10 @@ jobs:
 
     - name: Check golang version
       run: |
-        go install go1.23
-        go use go1.23
+        go install go1.23.2
+        go use go1.23.2
         export GOROOT_BOOTSTRAP=$GOROOT
-        go install go1.23
+        go install go1.23.2
         go env
 
     - name: Delete workflow runs
