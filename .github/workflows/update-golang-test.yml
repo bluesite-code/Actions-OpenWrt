@@ -55,7 +55,6 @@ steps:
       uses: ad-m/github-push-action@master
       with:
         branch: main
-        github_token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Check golang version
       run: |
