@@ -52,13 +52,6 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
-
-    - name: Update go.mod file
-      run: |
-        echo "module $(go list -m)" > go.mod
-        go mod edit -go 1.23.2
-        go mod tidy
-        go mod vendor
    
     - name: Clone source code
       working-directory: /workdir
@@ -96,6 +89,13 @@ jobs:
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
+
+    - name: Update go.mod file
+      run: |
+        echo "module $(go list -m)" > go.mod
+        go mod edit -go 1.23
+        go mod tidy
+        go mod vendor
         
     - name: Check golang version
       run: | 
