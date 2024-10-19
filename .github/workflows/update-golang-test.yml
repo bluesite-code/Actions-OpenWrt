@@ -78,9 +78,9 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
-    - name: Check golang version
+    - name: Change gotoolchain
       run: 
-        go env
+        go env -w GOTOOLCHAIN=go1.23.2
 
     - name: Download package
       id: package
