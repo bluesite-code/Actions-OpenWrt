@@ -67,8 +67,10 @@ jobs:
 
     - name: Change gotoolchain
       run: |
-        go env -w GOTOOLCHAIN=go1.22.8+auto
-        go env
+        go env -w GO111MODULE=on
+        go env -w GOTOOLCHAIN=go1.23
+        go env -w GOPROXY=https://goproxy.cn,direct
+        go env -w GOPRIVATE=git.mycompany.com,github.com/my/private
       
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
