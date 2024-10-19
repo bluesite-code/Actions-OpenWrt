@@ -78,9 +78,10 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
-    - name: Check golang version
-      run: 
-        go env
+    - name: Update go.mod file
+      run: |
+        echo "module $(go list -m)" > go.mod
+        go 1.23.2
 
     - name: Download package
       id: package
