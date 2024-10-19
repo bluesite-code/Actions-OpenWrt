@@ -18,7 +18,7 @@ on:
 
 env:
   REPO_URL: https://github.com/openwrt/openwrt
-  REPO_BRANCH: v23.05.4
+  REPO_BRANCH: v23.05.5
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   DIY_P1_SH: diy-plug-official.sh
@@ -78,11 +78,6 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
-    - name: Update go.mod file
-      run: |
-        echo "module $(go list -m)" > go.mod
-        go 1.23.2
-
     - name: Download package
       id: package
       run: |
@@ -91,6 +86,11 @@ jobs:
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
+
+    - name: Change gotoolchain
+      run: |
+        go env -w GOTOOLCHAIN=go1.23.2
+        go env
 
     - name: Compile the firmware
       id: compile
