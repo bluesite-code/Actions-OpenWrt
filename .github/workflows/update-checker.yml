@@ -82,24 +82,19 @@ jobs:
           find . -name "*alist*"
         fi
 
-    - name: Update alist go.mod
+    - name: Check Alist package structure
       run: |
-        cd openwrt/package/alist/alist
-        if [ -f "go.mod" ]; then
-          go mod edit -go=1.23.2
-          go mod tidy
-        else
-          echo "go.mod文件在package/alist/alist中未找到"
-          ls -l
-        fi
+        cd openwrt/package/alist
+        echo "Alist package structure:"
+        ls -R
 
     - name: Prepare Alist
       run: |
-        cd openwrt/package/alist/alist
-        if [ -f "go.mod" ]; then
-          GOFLAGS="-mod=mod" GO111MODULE=on go build
+        cd openwrt/package/alist
+        if [ -f "Makefile" ]; then
+          echo "Alist Makefile found, proceeding with OpenWrt build system"
         else
-          echo "go.mod文件在package/alist/alist中未找到，跳过构建"
+          echo "Alist Makefile not found, please check the package structure"
           ls -l
         fi
 
