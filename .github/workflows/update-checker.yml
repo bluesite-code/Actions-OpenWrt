@@ -64,14 +64,6 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
-    - name: Update feeds configuration
-      run: |
-        cd openwrt
-        echo "src-git luci https://github.com/openwrt/luci.git" >> feeds.conf.default
-        echo "src-git packages https://github.com/openwrt/packages.git" >> feeds.conf.default
-        echo "src-git routing https://github.com/openwrt/routing.git" >> feeds.conf.default
-        echo "src-git telephony https://github.com/openwrt/telephony.git" >> feeds.conf.default
-
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
 
