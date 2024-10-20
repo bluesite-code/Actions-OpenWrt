@@ -64,11 +64,46 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
+    - name: Update feeds configuration
+      run: |
+        cd openwrt
+        echo "src-git luci https://github.com/openwrt/luci.git" >> feeds.conf.default
+        echo "src-git packages https://github.com/openwrt/packages.git" >> feeds.conf.default
+        echo "src-git routing https://github.com/openwrt/routing.git" >> feeds.conf.default
+        echo "src-git telephony https://github.com/openwrt/telephony.git" >> feeds.conf.default
+
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
 
     - name: Install feeds
-      run: cd openwrt && ./scripts/feeds install -a
+      run: |
+        cd openwrt
+        ./scripts/feeds install -a
+        ./scripts/feeds install luci
+        ./scripts/feeds install luci-compat
+        ./scripts/feeds install liblzma
+        ./scripts/feeds install libnetsnmp
+        ./scripts/feeds install luci-base
+        ./scripts/feeds install csstidy
+        ./scripts/feeds install luasrcdiet
+        ./scripts/feeds install curl
+        ./scripts/feeds install libpam
+
+    - name: Reinstall feeds
+      run: cd openwrt && ./scripts/feeds update -i && ./scripts/feeds install -a
+
+    - name: Configure Alist and other packages
+      run: |
+        cd openwrt
+        echo "CONFIG_PACKAGE_alist=y" >> .config
+        echo "CONFIG_PACKAGE_luci-app-alist=y" >> .config
+        echo "CONFIG_PACKAGE_luci=y" >> .config
+        echo "CONFIG_PACKAGE_luci-compat=y" >> .config
+        echo "CONFIG_PACKAGE_liblzma=y" >> .config
+        echo "CONFIG_PACKAGE_libnetsnmp=y" >> .config
+        echo "CONFIG_PACKAGE_curl=y" >> .config
+        echo "CONFIG_PACKAGE_libpam=y" >> .config
+        make defconfig
 
     - name: Check for alist package
       run: |
@@ -91,11 +126,11 @@ jobs:
     - name: Prepare Alist
       run: |
         cd openwrt/package/alist
-        if [ -f "Makefile" ]; then
-          echo "Alist Makefile found, proceeding with OpenWrt build system"
+        if [ -f "alist/Makefile" ]; then
+          echo "Alist Makefile found in alist subdirectory, proceeding with OpenWrt build system"
         else
-          echo "Alist Makefile not found, please check the package structure"
-          ls -l
+          echo "Alist Makefile not found in expected location"
+          exit 1
         fi
 
     - name: Delete workflow runs
