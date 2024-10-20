@@ -33,9 +33,6 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@main
-
     - name: Initialization environment
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -50,23 +47,54 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
-    - name: Setup Go environment
+    - name: Check Go version and setup environment if needed
       run: |
-        sudo rm -rf /usr/local/go    
-        # 下载并安装Go 1.22.8
-        wget https://go.dev/dl/go1.22.8.linux-amd64.tar.gz
-        sudo tar -C /usr/local -xzf go1.22.8.linux-amd64.tar.gz
+        # 检查当前Go版本
+        current_go_version=$(go version | awk '{print $3}' | sed 's/go//')
         
-        # 下载并安装Go 1.23.2
-        wget https://go.dev/dl/go1.23.2.linux-amd64.tar.gz
-        sudo tar -C /usr/local -xzf go1.23.2.linux-amd64.tar.gz
+        # 检查当前gotoolchain设置
+        current_gotoolchain=$(go env GOTOOLCHAIN)
         
-        # 设置环境变量
-        echo "export PATH=$PATH:/usr/local/go/bin" >> $GITHUB_ENV
+        # 判断是否需要设置Go环境
+        if [[ "$(printf '%s\n' "1.22.8" "$current_go_version" | sort -V | head -n1)" != "1.22.8" ]] || 
+           [[ "$current_gotoolchain" == "auto" ]] || 
+           [[ "$current_gotoolchain" == "local" ]] || 
+           [[ "$(printf '%s\n' "1.22.8" "$current_gotoolchain" | sort -V | head -n1)" != "1.22.8" ]]; then
+          echo "需要设置Go环境"
+          
+          sudo rm -rf /usr/local/go    
+          # 下载并安装Go 1.22.8
+          wget https://go.dev/dl/go1.22.8.linux-amd64.tar.gz
+          sudo tar -C /usr/local -xzf go1.22.8.linux-amd64.tar.gz
+          
+          # 设置环境变量
+          echo "PATH=/usr/local/go/bin:$PATH" >> $GITHUB_ENV
+          
+          # 确保使用新安装的Go
+          source $GITHUB_ENV
+          
+          # 设置gotoolchain为1.22.8
+          go env -w GOTOOLCHAIN=go1.22.8
+          
+          # 修改 GOPROXY 设置
+          echo "GO111MODULE=on" >> $GITHUB_ENV
+          echo "GOPROXY=https://proxy.golang.org,direct" >> $GITHUB_ENV
+          echo "PATH=/usr/local/go/bin:$PATH" >> $GITHUB_ENV
+        else
+          echo "当前Go环境已满足要求，无需设置"
+        fi
         
-        # 更新gotoolchain为1.22.8
-        go env -w GOTOOLCHAIN=go1.22.8
-        go env
+        # 检查是否存在 go.mod 文件，如果存在则更新 Go 版本
+        if [ -f go.mod ]; then
+          go mod edit -go=1.22.8
+          echo "已更新 go.mod 文件中的 Go 版本为 1.22.8"
+        else
+          echo "未找到 go.mod 文件，跳过版本更新"
+        fi
+
+        # 显示Go环境信息
+        go version
+        go env GOTOOLCHAIN
 
     - name: Clone source code
       working-directory: /workdir
@@ -107,6 +135,9 @@ jobs:
 
     - name: Compile the firmware
       id: compile
+      env:
+        GO111MODULE: on
+        GOPROXY: https://proxy.golang.org,direct
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
