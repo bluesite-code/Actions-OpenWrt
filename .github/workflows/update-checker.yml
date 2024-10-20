@@ -84,22 +84,22 @@ jobs:
 
     - name: Update alist go.mod
       run: |
-        cd openwrt/package/alist
+        cd openwrt/package/alist/alist
         if [ -f "go.mod" ]; then
           go mod edit -go=1.23.2
           go mod tidy
         else
-          echo "go.mod file not found in package/alist"
+          echo "go.mod文件在package/alist/alist中未找到"
           ls -l
         fi
 
     - name: Prepare Alist
       run: |
-        cd openwrt/package/alist
+        cd openwrt/package/alist/alist
         if [ -f "go.mod" ]; then
           GOFLAGS="-mod=mod" GO111MODULE=on go build
         else
-          echo "go.mod file not found in package/alist, skipping build"
+          echo "go.mod文件在package/alist/alist中未找到，跳过构建"
           ls -l
         fi
 
