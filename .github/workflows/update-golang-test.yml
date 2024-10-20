@@ -50,20 +50,6 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.23.2'
-        cache: false
-    
-    - name: Set Go environment
-      run: |
-        go env -w GOTOOLCHAIN=go1.23.2
-        echo "GO111MODULE=on" >> $GITHUB_ENV
-        echo "GOPROXY=https://proxy.golang.org,direct" >> $GITHUB_ENV
-        go version
-        go env GOTOOLCHAIN
-
     - name: Clone source code
       working-directory: /workdir
       run: |
@@ -83,6 +69,32 @@ jobs:
 
     - name: Install feeds
       run: cd openwrt && ./scripts/feeds install -a
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23.2'
+        cache: false
+    
+    - name: Set Go environment
+      run: |
+        go env -w GOTOOLCHAIN=local
+        echo "GO111MODULE=on" >> $GITHUB_ENV
+        echo "GOPROXY=https://proxy.golang.org,direct" >> $GITHUB_ENV
+        echo "GOTOOLCHAIN=local" >> $GITHUB_ENV
+        go version
+        go env 
+        
+    - name: Update alist go.mod
+      run: |
+        cd package/alist/luci-app-alist
+        go mod edit -go=1.23.2
+        go mod tidy
+
+    - name: Prepare Alist
+      run: |
+        cd package/alist/luci-app-alist
+        GOFLAGS="-mod=mod" GO111MODULE=on go build
 
     - name: Load custom configuration
       run: |
