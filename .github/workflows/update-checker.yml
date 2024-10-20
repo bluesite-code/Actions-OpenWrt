@@ -79,29 +79,20 @@ jobs:
       run: |
         cd openwrt
         ./scripts/feeds install -a
-        ./scripts/feeds install luci
-        ./scripts/feeds install luci-compat
         ./scripts/feeds install liblzma
         ./scripts/feeds install libnetsnmp
-        ./scripts/feeds install luci-base
         ./scripts/feeds install csstidy
         ./scripts/feeds install luasrcdiet
-        ./scripts/feeds install curl
         ./scripts/feeds install libpam
 
     - name: Reinstall feeds
       run: cd openwrt && ./scripts/feeds update -i && ./scripts/feeds install -a
 
-    - name: Configure Alist and other packages
+    - name: Configure additional packages
       run: |
         cd openwrt
-        echo "CONFIG_PACKAGE_alist=y" >> .config
-        echo "CONFIG_PACKAGE_luci-app-alist=y" >> .config
-        echo "CONFIG_PACKAGE_luci=y" >> .config
-        echo "CONFIG_PACKAGE_luci-compat=y" >> .config
         echo "CONFIG_PACKAGE_liblzma=y" >> .config
         echo "CONFIG_PACKAGE_libnetsnmp=y" >> .config
-        echo "CONFIG_PACKAGE_curl=y" >> .config
         echo "CONFIG_PACKAGE_libpam=y" >> .config
         make defconfig
 
