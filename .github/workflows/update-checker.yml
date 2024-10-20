@@ -51,63 +51,59 @@ jobs:
         sudo chown $USER:$GROUPS /workdir
 
     - name: Clone source code
-      working-directory: /workdir
       run: |
-        df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
-
-    - name: Load custom feeds
-      run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
-        chmod +x $DIY_P1_SH
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P1_SH
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
 
-    - name: Update feeds
-      run: cd openwrt && ./scripts/feeds update -a
-
-    - name: Install feeds
-      run: cd openwrt && ./scripts/feeds install -a
-
-    # 添加以下步骤来检查目录结构
-    - name: Check directory structure
+    - name: Check for alist package
       run: |
-        ls -R openwrt/package
-        [ -d "openwrt/package/alist/luci-app-alist" ] || echo "alist directory does not exist"
+        cd openwrt
+        if [ -d "package/feeds/luci/luci-app-alist" ]; then
+          echo "Alist package found in feeds"
+          ls -l package/feeds/luci/luci-app-alist
+        elif [ -d "package/alist" ]; then
+          echo "Alist package found in package directory"
+          ls -l package/alist
+        else
+          echo "Alist package not found"
+          echo "Searching for alist..."
+          find . -name "*alist*"
+        fi
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.23.2'
-        cache: false
-    
-    - name: Set Go environment
-      run: |
-        go env -w GOTOOLCHAIN=local
-        echo "GO111MODULE=on" >> $GITHUB_ENV
-        echo "GOPROXY=https://proxy.golang.org,direct" >> $GITHUB_ENV
-        echo "GOTOOLCHAIN=local" >> $GITHUB_ENV
-        go version
-        go env 
-        
     - name: Update alist go.mod
       run: |
-        cd openwrt/package/alist/luci-app-alist || echo "Failed to change directory"
-        if [ -f "go.mod" ]; then
-          go mod edit -go=1.23.2
-          go mod tidy
+        cd openwrt
+        ALIST_DIR=$(find . -type d -name "*alist*" | grep -v "feeds" | head -n 1)
+        if [ -n "$ALIST_DIR" ]; then
+          echo "Found alist directory: $ALIST_DIR"
+          cd "$ALIST_DIR"
+          if [ -f "go.mod" ]; then
+            go mod edit -go=1.23.2
+            go mod tidy
+          else
+            echo "go.mod file not found in $ALIST_DIR"
+            ls -l
+          fi
         else
-          echo "go.mod file not found"
+          echo "Could not find alist directory"
         fi
 
     - name: Prepare Alist
       run: |
-        cd openwrt/package/alist/luci-app-alist || echo "Failed to change directory"
-        if [ -f "go.mod" ]; then
-          GOFLAGS="-mod=mod" GO111MODULE=on go build
+        cd openwrt
+        ALIST_DIR=$(find . -type d -name "*alist*" | grep -v "feeds" | head -n 1)
+        if [ -n "$ALIST_DIR" ]; then
+          cd "$ALIST_DIR"
+          if [ -f "go.mod" ]; then
+            GOFLAGS="-mod=mod" GO111MODULE=on go build
+          else
+            echo "go.mod file not found in $ALIST_DIR, skipping build"
+            ls -l
+          fi
         else
-          echo "go.mod file not found, skipping build"
+          echo "Could not find alist directory"
         fi
 
     - name: Delete workflow runs
