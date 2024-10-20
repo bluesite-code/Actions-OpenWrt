@@ -10,7 +10,7 @@
 # See /LICENSE for more information.
 #
 
-name: Update-golang-test
+name: Update Checker
 
 on:
   repository_dispatch:
