@@ -98,7 +98,7 @@ jobs:
 
     - name: Prepare Alist
       run: |
-        cd package/alist/luci-app-alist
+        cd openwrt/package/alist/luci-app-alist
         GOFLAGS="-mod=mod" GO111MODULE=on go build
 
     - name: Update feeds
