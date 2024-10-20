@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       release_type:
-        description: '选择发布类型' # artifact or both
+        description: '选择发布类型'
         required: true
         default: 'none'
         type: choice
@@ -79,44 +79,30 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: ${{ env.GO_VERSION }}
-        cache: true  # Enable Go module cache
-    
-    - name: Set Go environment
-      run: |
-        go version
-        go env 
-        
-    - name: Update alist go.mod
-      run: |
-        cd openwrt/package/alist/luci-app-alist
-        go mod edit -go=1.23.2
-        go mod tidy
-
-    - name: Prepare Alist
-      run: |
-        cd openwrt/package/alist/luci-app-alist
-        GOFLAGS="-mod=mod" GO111MODULE=on go build
-
     - name: Update feeds
+      run: cd openwrt && ./scripts/feeds update -a
+
+    - name: Install feeds
       run: |
         cd openwrt
-        ./scripts/feeds update -a
         ./scripts/feeds install -a
+        ./scripts/feeds install liblzma
+        ./scripts/feeds install libnetsnmp
+        ./scripts/feeds install csstidy
+        ./scripts/feeds install luasrcdiet
+        ./scripts/feeds install libpam
 
-    - name: Generate config
+    - name: Reinstall feeds
+      run: cd openwrt && ./scripts/feeds update -i && ./scripts/feeds install -a
+
+    - name: Configure additional packages
       run: |
         cd openwrt
-        cat > .config <<EOF
-        CONFIG_TARGET_x86=y
-        CONFIG_TARGET_x86_64=y
-        CONFIG_TARGET_x86_64_DEVICE_generic=y
-        EOF
+        echo "CONFIG_PACKAGE_liblzma=y" >> .config
+        echo "CONFIG_PACKAGE_libnetsnmp=y" >> .config
+        echo "CONFIG_PACKAGE_libpam=y" >> .config
         make defconfig
-
+          
     - name: Download package
       run: |
         cd openwrt
