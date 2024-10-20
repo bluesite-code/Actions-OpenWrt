@@ -92,7 +92,7 @@ jobs:
         
     - name: Update alist go.mod
       run: |
-        cd package/alist/luci-app-alist
+        cd openwrt/package/alist/luci-app-alist
         go mod edit -go=1.23.2
         go mod tidy
 
