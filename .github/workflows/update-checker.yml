@@ -1,8 +1,8 @@
 #
 # https://github.com/P3TERX/Actions-OpenWrt
 #
-# File: .github/workflows/update-checker.yml
-# Description: Source code update checker
+# File: .github/workflows/openwrt-bulder.yml
+# Description: Build OpenWrt using GitHub Actions
 #
 # Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
 #
@@ -10,50 +10,117 @@
 # See /LICENSE for more information.
 #
 
-name: Update Checker
-
-env:
-  REPO_URL: https://github.com/destan19/openwrt-fros
-  REPO_BRANCH: openwrt-23.05-fros
+name: Update-golang-test
 
 on:
+  repository_dispatch:
   workflow_dispatch:
-#  schedule:
-#    - cron: 0 */18 * * *
+
+env:
+  REPO_URL: https://github.com/openwrt/openwrt
+  REPO_BRANCH: v23.05.5
+  FEEDS_CONF: feeds.conf.default
+  CONFIG_FILE: .config
+  DIY_P1_SH: diy-plug-official.sh
+  DIY_P2_SH: diy-config.sh
+  UPLOAD_BIN_DIR: false
+  UPLOAD_FIRMWARE: true
+  UPLOAD_RELEASE: true
+  TZ: Asia/Shanghai
 
 jobs:
-  check:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-22.04
 
     steps:
+    - name: Checkout
+      uses: actions/checkout@v4
 
-    - name: Get Commit Hash
-      id: getHash
+    - name: Initialization environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
       run: |
-        git clone --depth 1 $REPO_URL -b $REPO_BRANCH .
-        echo "commitHash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+        sudo docker image prune --all --force
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pyelftools python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean
+        sudo timedatectl set-timezone "$TZ"
+        sudo mkdir -p /workdir
+        sudo chown $USER:$GROUPS /workdir
 
-    - name: Compare Commit Hash
-      id: cacheHash
-      uses: actions/cache@v3
-      with:
-        path: .commitHash
-        key: commitHash_${{ steps.getHash.outputs.commitHash }}
-
-    - name: Save New Commit Hash
-      if: steps.cacheHash.outputs.cache-hit != 'true'
+    - name: Clone source code
+      working-directory: /workdir
       run: |
-        echo ${{ steps.getHash.outputs.commitHash }} | tee .commitHash
+        df -hT $PWD
+        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
-    - name: Trigger build
-      if: steps.cacheHash.outputs.cache-hit != 'true'
-      uses: peter-evans/repository-dispatch@v2
+    - name: Load custom feeds
+      run: |
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
+        chmod +x $DIY_P1_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P1_SH
+
+    - name: Update feeds
+      run: cd openwrt && ./scripts/feeds update -a
+
+    - name: Install feeds
+      run: cd openwrt && ./scripts/feeds install -a
+
+    # 添加以下步骤来检查目录结构
+    - name: Check directory structure
+      run: |
+        ls -R openwrt/package
+        [ -d "openwrt/package/alist/luci-app-alist" ] || echo "alist directory does not exist"
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
       with:
-        token: ${{ github.token }}
-        event-type: Source Code Update
+        go-version: '1.23.2'
+        cache: false
+    
+    - name: Set Go environment
+      run: |
+        go env -w GOTOOLCHAIN=local
+        echo "GO111MODULE=on" >> $GITHUB_ENV
+        echo "GOPROXY=https://proxy.golang.org,direct" >> $GITHUB_ENV
+        echo "GOTOOLCHAIN=local" >> $GITHUB_ENV
+        go version
+        go env 
+        
+    - name: Update alist go.mod
+      run: |
+        cd openwrt/package/alist/luci-app-alist || echo "Failed to change directory"
+        if [ -f "go.mod" ]; then
+          go mod edit -go=1.23.2
+          go mod tidy
+        else
+          echo "go.mod file not found"
+        fi
+
+    - name: Prepare Alist
+      run: |
+        cd openwrt/package/alist/luci-app-alist || echo "Failed to change directory"
+        if [ -f "go.mod" ]; then
+          GOFLAGS="-mod=mod" GO111MODULE=on go build
+        else
+          echo "go.mod file not found, skipping build"
+        fi
 
     - name: Delete workflow runs
-      uses: Mattraks/delete-workflow-runs@v2
+      uses: Mattraks/delete-workflow-runs@main
       with:
         retain_days: 0
         keep_minimum_runs: 2
+
+    - name: Remove old Releases
+      uses: dev-drprasad/delete-older-releases@master
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      with:
+        keep_latest: 3
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
