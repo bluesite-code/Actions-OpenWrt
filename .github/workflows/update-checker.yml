@@ -51,19 +51,28 @@ jobs:
         sudo chown $USER:$GROUPS /workdir
 
     - name: Clone source code
+      working-directory: /workdir
       run: |
-        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        df -hT $PWD
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+
+    - name: Load custom feeds
+      run: |
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
+        chmod +x $DIY_P1_SH
         cd openwrt
-        ./scripts/feeds update -a
-        ./scripts/feeds install -a
+        $GITHUB_WORKSPACE/$DIY_P1_SH
+
+    - name: Update feeds
+      run: cd openwrt && ./scripts/feeds update -a
+
+    - name: Install feeds
+      run: cd openwrt && ./scripts/feeds install -a
 
     - name: Check for alist package
       run: |
         cd openwrt
-        if [ -d "package/feeds/luci/luci-app-alist" ]; then
-          echo "Alist package found in feeds"
-          ls -l package/feeds/luci/luci-app-alist
-        elif [ -d "package/alist" ]; then
+        if [ -d "package/alist" ]; then
           echo "Alist package found in package directory"
           ls -l package/alist
         else
@@ -74,36 +83,23 @@ jobs:
 
     - name: Update alist go.mod
       run: |
-        cd openwrt
-        ALIST_DIR=$(find . -type d -name "*alist*" | grep -v "feeds" | head -n 1)
-        if [ -n "$ALIST_DIR" ]; then
-          echo "Found alist directory: $ALIST_DIR"
-          cd "$ALIST_DIR"
-          if [ -f "go.mod" ]; then
-            go mod edit -go=1.23.2
-            go mod tidy
-          else
-            echo "go.mod file not found in $ALIST_DIR"
-            ls -l
-          fi
+        cd openwrt/package/alist
+        if [ -f "go.mod" ]; then
+          go mod edit -go=1.23.2
+          go mod tidy
         else
-          echo "Could not find alist directory"
+          echo "go.mod file not found in package/alist"
+          ls -l
         fi
 
     - name: Prepare Alist
       run: |
-        cd openwrt
-        ALIST_DIR=$(find . -type d -name "*alist*" | grep -v "feeds" | head -n 1)
-        if [ -n "$ALIST_DIR" ]; then
-          cd "$ALIST_DIR"
-          if [ -f "go.mod" ]; then
-            GOFLAGS="-mod=mod" GO111MODULE=on go build
-          else
-            echo "go.mod file not found in $ALIST_DIR, skipping build"
-            ls -l
-          fi
+        cd openwrt/package/alist
+        if [ -f "go.mod" ]; then
+          GOFLAGS="-mod=mod" GO111MODULE=on go build
         else
-          echo "Could not find alist directory"
+          echo "go.mod file not found in package/alist, skipping build"
+          ls -l
         fi
 
     - name: Delete workflow runs
