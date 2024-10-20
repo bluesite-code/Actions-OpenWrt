@@ -43,5 +43,7 @@ git clone https://github.com/kenzok78/luci-app-fileassistant package/luci-app-fi
 
 # Add theme
 #echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
-cd openwrt/package
-git clone https://github.com/jerrykuku/luci-theme-argon.git
+git clone https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon
+
+# Make sure all operations are performed in the correct directory
+cd "$GITHUB_WORKSPACE/openwrt" || exit
