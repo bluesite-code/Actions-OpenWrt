@@ -81,10 +81,31 @@ jobs:
         echo "当前目录结构："
         ls -R
 
-    - name: 检查网络
+    - name: 检查网络连接
+      continue-on-error: true
       run: |
-        ping -c 4 github.com
-        curl -I https://github.com
+        echo "尝试使用 curl 访问 GitHub..."
+        if curl -sSf https://github.com > /dev/null; then
+          echo "成功连接到 GitHub"
+        else
+          echo "无法连接到 GitHub，错误代码: $?"
+        fi
+        
+        echo "尝试使用 wget 访问 GitHub..."
+        if wget -q --spider https://github.com; then
+          echo "成功连接到 GitHub"
+        else
+          echo "无法连接到 GitHub，错误代码: $?"
+        fi
+        
+        echo "检查 DNS 解析..."
+        nslookup github.com
+        
+        echo "显示网络路由..."
+        ip route
+        
+        echo "显示网络接口..."
+        ip addr
 
     - name: 克隆源码
       run: |
