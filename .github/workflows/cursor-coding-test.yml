@@ -42,7 +42,7 @@ jobs:
         mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python3 python3-pip python3-ply \
         python3-pyelftools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx unzip \
         vim wget xmlto xxd zlib1g-dev
-       # 安装 Go 1.22 版本
+        # 安装 Go 1.22 版本
         wget https://go.dev/dl/go1.22.1.linux-amd64.tar.gz
         sudo rm -rf /usr/local/go
         sudo tar -C /usr/local -xzf go1.22.1.linux-amd64.tar.gz
