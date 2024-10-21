@@ -129,12 +129,12 @@ jobs:
         mkdir -p ./artifact/firmware
         mkdir -p ./artifact/package
         mkdir -p ./artifact/buildinfo
-        cp -rf $(find ./openwrt/bin/targets/ -type f) ./artifact/firmware/
-        cp -rf $(find ./openwrt/bin/packages/ -type f -name "*.ipk") ./artifact/package/
-        cp -rf $(find ./openwrt/bin/targets/ -type f -name "*.buildinfo" -o -name "*.manifest") ./artifact/buildinfo/
+        cp -rf $(find ./openwrt/bin/targets/ -type f) ./artifact/firmware/ || true
+        cp -rf $(find ./openwrt/bin/packages/ -type f -name "*.ipk") ./artifact/package/ || true
+        cp -rf $(find ./openwrt/bin/targets/ -type f -name "*.buildinfo" -o -name "*.manifest") ./artifact/buildinfo/ || true
         echo "文件列表："
-        find ./artifact -type f
-
+        find ./artifact -type f || echo "No files found in artifact directory"
+        
     - name: Upload bin directory
       uses: actions/upload-artifact@main
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
@@ -155,7 +155,7 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         echo "status=success" >> $GITHUB_OUTPUT
-        echo "发布说明" > release.txt
+        echo "Release notes" > release.txt
 
     - name: Upload firmware to release
       uses: softprops/action-gh-release@v1
@@ -187,8 +187,8 @@ jobs:
     - name: Debug info
       if: failure()
       run: |
-        echo "Debug 信息："
-        echo "当前目录内容："
+        echo "Debug information:"
+        echo "Current directory contents:"
         ls -R
         echo "GitHub context:"
-        echo "${{ toJson(github) }}"
+        echo '${{ toJson(github) }}'
