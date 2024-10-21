@@ -34,10 +34,6 @@ env:
   CONFIG_FILE: .config
   DIY_P1_SH: diy-plug-official.sh
   DIY_P2_SH: diy-config.sh
-  GO_VERSION: '1.23.2' 
-  GO111MODULE: on
-  GOPROXY: https://proxy.golang.org,direct
-  GOTOOLCHAIN: local
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
