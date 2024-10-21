@@ -31,7 +31,7 @@ env:
   REPO_URL: https://github.com/openwrt/openwrt
   REPO_BRANCH: v23.05.5
   FEEDS_CONF: feeds.conf.default
-  CONFIG_FILE: test.confg
+  CONFIG_FILE: .config
   DIY_P1_SH: diy-plug-official.sh
   DIY_P2_SH: diy-config.sh
   GO_VERSION: '1.23.2' 
@@ -83,26 +83,21 @@ jobs:
       run: cd openwrt && ./scripts/feeds update -a
 
     - name: Install feeds
+      run: cd openwrt && ./scripts/feeds install -a
+
+    - name: Load custom configuration
+      run: |
+        [ -e files ] && mv files openwrt/files
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        chmod +x $DIY_P2_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P2_SH
+
+    - name: Ensure configuration
       run: |
         cd openwrt
-        ./scripts/feeds install -a
-        ./scripts/feeds install liblzma
-        ./scripts/feeds install libnetsnmp
-        ./scripts/feeds install csstidy
-        ./scripts/feeds install luasrcdiet
-        ./scripts/feeds install libpam
-
-    - name: Reinstall feeds
-      run: cd openwrt && ./scripts/feeds update -i && ./scripts/feeds install -a
-
-    - name: Configure additional packages
-      run: |
-        cd openwrt
-        echo "CONFIG_PACKAGE_liblzma=y" >> test.confg
-        echo "CONFIG_PACKAGE_libnetsnmp=y" >> test.confg
-        echo "CONFIG_PACKAGE_libpam=y" >> test.confg
         make defconfig
-          
+
     - name: Download package
       run: |
         cd openwrt
@@ -157,6 +152,13 @@ jobs:
         echo "status=success" >> $GITHUB_OUTPUT
         echo "Release notes" > release.txt
 
+    - name: Verify release info
+      run: |
+        echo "Release tag: ${{ steps.tag.outputs.release_tag }}"
+        cat release.txt
+        echo "Artifact contents:"
+        find ./artifact -type f
+
     - name: Upload firmware to release
       uses: softprops/action-gh-release@v1
       if: (github.event.inputs.release_type == 'release' || github.event.inputs.release_type == 'both') && steps.tag.outputs.status == 'success' && !cancelled()
@@ -166,7 +168,9 @@ jobs:
         tag_name: ${{ steps.tag.outputs.release_tag }}
         body_path: release.txt
         files: |
-          ./artifact/**/*
+          ./artifact/buildinfo/*
+          ./artifact/firmware/*
+          ./artifact/package/*
         fail_on_unmatched_files: false
 
     - name: Delete workflow runs
