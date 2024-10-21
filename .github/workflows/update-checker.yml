@@ -15,6 +15,17 @@ name: Update Checker
 on:
   repository_dispatch:
   workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Select release type'
+        required: true
+        default: 'none'
+        type: choice
+        options:
+        - none
+        - artifact
+        - release
+        - both
 
 env:
   REPO_URL: https://github.com/openwrt/openwrt
