@@ -42,32 +42,40 @@ jobs:
         mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python3 python3-pip python3-ply \
         python3-pyelftools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx unzip \
         vim wget xmlto xxd zlib1g-dev
-        # 安装 Go 1.22 版本
-        wget https://go.dev/dl/go1.22.1.linux-amd64.tar.gz
-        sudo rm -rf /usr/local/go
-        sudo tar -C /usr/local -xzf go1.22.1.linux-amd64.tar.gz
-        echo "PATH=/usr/local/go/bin:$PATH" >> $GITHUB_ENV
-        # 设置 Go 环境变量
+
+    - name: 设置 Go 环境变量
+      run: |
         echo "GOROOT=/usr/local/go" >> $GITHUB_ENV
         echo "GOPATH=$HOME/go" >> $GITHUB_ENV
+        echo "PATH=$GOROOT/bin:$GOPATH/bin:$PATH" >> $GITHUB_ENV
         echo "GOTOOLCHAIN=local" >> $GITHUB_ENV
+        echo "GO111MODULE=on" >> $GITHUB_ENV
 
-    - name: 缓存
-      uses: actions/cache@v4
-      with:
-        path: openwrt/dl
-        key: ${{ runner.os }}-openwrt-${{ hashFiles('**/feeds.conf.default') }}
-        restore-keys: |
-          ${{ runner.os }}-openwrt-
+    - name: 验证 Go 环境
+      run: |
+        go version
+        go env
+
+    - name: 比较环境
+      run: |
+        echo "系统信息："
+        uname -a
+        lsb_release -a
+        echo "环境变量："
+        env | sort
+        echo "当前目录结构："
+        ls -R
+
+    - name: 检查网络
+      run: |
+        ping -c 4 github.com
+        curl -I https://github.com
 
     - name: 克隆源码
       run: |
         git clone $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf /workspaces/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
-        # 克隆特定版本的 Go 语言包
-        git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
-
+        
     - name: 加载自定义资源
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
@@ -87,10 +95,6 @@ jobs:
         chmod +x $DIY_P2_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
-        # 更新所有 Go 相关包的 Makefile
-        find package -name Makefile | xargs sed -i 's/GO_VERSION_REQUIRED:=.*/GO_VERSION_REQUIRED:=1.23/'
-        # 在所有 Go 相关包的 Makefile 中添加 GOTOOLCHAIN 设置
-        find package -name Makefile | xargs sed -i '/^include/i export GOTOOLCHAIN=local'
 
     - name: 下载dl库
       id: package
@@ -101,17 +105,14 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
-    - name: 开始编译
+    - name: 编译
       id: compile
-      timeout-minutes: 360
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        make -j$(nproc) || make -j1 || make -j1 V=s
-        echo "status=success" >> $GITHUB_OUTPUT
-        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
-        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
-        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+        make -j$(nproc) || make -j1 V=s
+      env:
+        FORCE_UNSAFE_CONFIGURE: 1
 
     - name: 检查空间使用情况
       if: always()
@@ -164,3 +165,19 @@ jobs:
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 输出错误日志
+      if: failure()
+      run: |
+        cd openwrt
+        cat logs/last-build.log
+        # 输出其他可能有用的日志文件
+
+    - name: 检查关键文件
+      run: |
+        cd openwrt
+        echo "检查 .config 文件："
+        cat .config
+        echo "检查 feeds.conf.default 文件："
+        cat feeds.conf.default
+        # 检查其他可能影响编译的关键文件
