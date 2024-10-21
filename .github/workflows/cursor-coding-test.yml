@@ -45,110 +45,40 @@ jobs:
 
     - name: 检查并安装 Go
       run: |
-        if ! command -v go &> /dev/null; then
-          echo "Go 未安装，正在安装..."
+        if ! command -v go &> /dev/null || [[ $(go version) != *"go1.23"* ]]; then
+          echo "安装 Go 1.23.2..."
           wget https://go.dev/dl/go1.23.2.linux-amd64.tar.gz
+          sudo rm -rf /usr/local/go
           sudo tar -C /usr/local -xzf go1.23.2.linux-amd64.tar.gz
           echo "GOROOT=/usr/local/go" >> $GITHUB_ENV
           echo "PATH=/usr/local/go/bin:$PATH" >> $GITHUB_ENV
         else
-          echo "Go 已安装，版本为："
+          echo "Go 1.23 已安装，版本为："
           go version
         fi
 
     - name: 设置 Go 环境变量
       run: |
-        echo "GOPATH=$HOME/go" >> $GITHUB_ENV
-        echo "PATH=$PATH:$HOME/go/bin" >> $GITHUB_ENV
-        echo "GOTOOLCHAIN=local" >> $GITHUB_ENV
+        echo "GOTOOLCHAIN=go1.23.0" >> $GITHUB_ENV
         echo "GO111MODULE=on" >> $GITHUB_ENV
 
     - name: 验证 Go 环境
       run: |
-        echo "PATH: $PATH"
-        echo "GOROOT: $GOROOT"
-        echo "GOPATH: $GOPATH"
         go version
         go env
 
-    - name: 比较环境
-      run: |
-        echo "系统信息："
-        uname -a
-        lsb_release -a
-        echo "环境变量："
-        env | sort
-        echo "当前目录结构："
-        ls -R
-
-    - name: 检查网络连接
-      continue-on-error: true
-      run: |
-        echo "尝试使用 curl 访问 GitHub..."
-        if curl -sSf https://github.com > /dev/null; then
-          echo "成功连接到 GitHub"
-        else
-          echo "无法连接到 GitHub，错误代码: $?"
-        fi
-        
-        echo "尝试使用 wget 访问 GitHub..."
-        if wget -q --spider https://github.com; then
-          echo "成功连接到 GitHub"
-        else
-          echo "无法连接到 GitHub，错误代码: $?"
-        fi
-        
-        echo "检查 DNS 解析..."
-        nslookup github.com
-        
-        echo "显示网络路由..."
-        ip route
-        
-        echo "显示网络接口..."
-        ip addr
-
-    - name: 克隆源码
-      run: |
-        git clone $REPO_URL -b $REPO_BRANCH openwrt
-        cd openwrt
-        
-    - name: 加载自定义资源
-      run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
-        chmod +x $DIY_P1_SH
-        cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P1_SH
-
-    - name: 更新 feeds
+    - name: 处理 Go 依赖
       run: |
         cd openwrt
-        ./scripts/feeds update -a
-        ./scripts/feeds install -a
+        find . -name go.mod -execdir go mod tidy \;
+        find . -name go.mod -execdir go get \;
 
-    - name: 加载自定义配置
-      run: |
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-        chmod +x $DIY_P2_SH
-        cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P2_SH
-
-    - name: 下载dl库
-      id: package
+    - name: 编译 OpenWrt
       run: |
         cd openwrt
         make defconfig
         make download -j8
-        find dl -size -1024c -exec ls -l {} \;
-        find dl -size -1024c -exec rm -f {} \;
-
-    - name: 编译
-      id: compile
-      run: |
-        cd openwrt
-        echo -e "$(nproc) thread compile"
-        make -j$(nproc) || make -j1 V=s
-      env:
-        FORCE_UNSAFE_CONFIGURE: 1
+        make V=s -j$(nproc)
 
     - name: 检查空间使用情况
       if: always()
