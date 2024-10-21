@@ -15,17 +15,6 @@ name: Update Checker
 on:
   repository_dispatch:
   workflow_dispatch:
-    inputs:
-      release_type:
-        description: 'release'
-        required: true
-        default: 'none'
-        type: choice
-        options:
-        - none
-        - artifact
-        - release
-        - both
 
 env:
   REPO_URL: https://github.com/openwrt/openwrt
@@ -127,7 +116,7 @@ jobs:
           exit 1
         fi
 
-      - name: Download package
+    - name: Download package
       run: |
         cd openwrt
         make download -j8
