@@ -43,6 +43,11 @@ jobs:
         python3-pyelftools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx unzip \
         vim wget xmlto xxd zlib1g-dev
 
+    - name: 克隆源码
+      run: |
+        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        ln -sf /workspaces/openwrt $GITHUB_WORKSPACE/openwrt
+
     - name: 缓存
       uses: actions/cache@v3
       with:
@@ -50,11 +55,6 @@ jobs:
         key: ${{ runner.os }}-openwrt-${{ hashFiles('**/feeds.conf.default') }}
         restore-keys: |
           ${{ runner.os }}-openwrt-
-
-    - name: 克隆源码
-      run: |
-        git clone $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf /workspaces/openwrt $GITHUB_WORKSPACE/openwrt
 
     - name: 加载自定义资源
       run: |
