@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       release_type:
-        description: '选择发布类型'
+        description: 'Select release type'
         required: true
         default: 'none'
         type: choice
@@ -75,11 +75,12 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
-    - name: Update feeds
-      run: cd openwrt && ./scripts/feeds update -a
-
-    - name: Install feeds
-      run: cd openwrt && ./scripts/feeds install -a
+    - name: Update and install feeds
+      run: |
+        cd openwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        ./scripts/feeds install golang libmosquitto csstidy luasrcdiet
 
     - name: Load custom configuration
       run: |
@@ -88,6 +89,10 @@ jobs:
         chmod +x $DIY_P2_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
+        echo "CONFIG_PACKAGE_golang=y" >> .config
+        echo "CONFIG_PACKAGE_libmosquitto=y" >> .config
+        echo "CONFIG_PACKAGE_csstidy=y" >> .config
+        echo "CONFIG_PACKAGE_luasrcdiet=y" >> .config
 
     - name: Ensure configuration
       run: |
@@ -123,7 +128,7 @@ jobs:
         cp -rf $(find ./openwrt/bin/targets/ -type f) ./artifact/firmware/ || true
         cp -rf $(find ./openwrt/bin/packages/ -type f -name "*.ipk") ./artifact/package/ || true
         cp -rf $(find ./openwrt/bin/targets/ -type f -name "*.buildinfo" -o -name "*.manifest") ./artifact/buildinfo/ || true
-        echo "文件列表："
+        echo "File list:"
         find ./artifact -type f || echo "No files found in artifact directory"
         
     - name: Upload bin directory
@@ -192,3 +197,9 @@ jobs:
         ls -R
         echo "GitHub context:"
         echo '${{ toJson(github) }}'
+
+    - name: Verify configuration
+      run: |
+        cd openwrt
+        echo "Checking for added packages:"
+        grep -E "CONFIG_PACKAGE_(golang|libmosquitto|csstidy|luasrcdiet)=y" .config || echo "Packages not found in .config"
