@@ -31,7 +31,7 @@ env:
   REPO_URL: https://github.com/openwrt/openwrt
   REPO_BRANCH: v23.05.5
   FEEDS_CONF: feeds.conf.default
-  CONFIG_FILE: .config
+  CONFIG_FILE: test.confg
   DIY_P1_SH: diy-plug-official.sh
   DIY_P2_SH: diy-config.sh
   GO_VERSION: '1.23.2' 
@@ -98,9 +98,9 @@ jobs:
     - name: Configure additional packages
       run: |
         cd openwrt
-        echo "CONFIG_PACKAGE_liblzma=y" >> .config
-        echo "CONFIG_PACKAGE_libnetsnmp=y" >> .config
-        echo "CONFIG_PACKAGE_libpam=y" >> .config
+        echo "CONFIG_PACKAGE_liblzma=y" >> test.confg
+        echo "CONFIG_PACKAGE_libnetsnmp=y" >> test.confg
+        echo "CONFIG_PACKAGE_libpam=y" >> test.confg
         make defconfig
           
     - name: Download package
@@ -132,6 +132,8 @@ jobs:
         cp -rf $(find ./openwrt/bin/targets/ -type f) ./artifact/firmware/
         cp -rf $(find ./openwrt/bin/packages/ -type f -name "*.ipk") ./artifact/package/
         cp -rf $(find ./openwrt/bin/targets/ -type f -name "*.buildinfo" -o -name "*.manifest") ./artifact/buildinfo/
+        echo "文件列表："
+        find ./artifact -type f
 
     - name: Upload bin directory
       uses: actions/upload-artifact@main
@@ -152,8 +154,8 @@ jobs:
       if: github.event.inputs.release_type == 'release' || github.event.inputs.release_type == 'both'
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
-        touch release.txt
-        echo "::set-output name=status::success"
+        echo "status=success" >> $GITHUB_OUTPUT
+        echo "发布说明" > release.txt
 
     - name: Upload firmware to release
       uses: softprops/action-gh-release@v1
@@ -163,7 +165,9 @@ jobs:
       with:
         tag_name: ${{ steps.tag.outputs.release_tag }}
         body_path: release.txt
-        files: ./artifact/**/*
+        files: |
+          ./artifact/**/*
+        fail_on_unmatched_files: false
 
     - name: Delete workflow runs
       uses: GitRML/delete-workflow-runs@main
@@ -179,3 +183,12 @@ jobs:
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Debug info
+      if: failure()
+      run: |
+        echo "Debug 信息："
+        echo "当前目录内容："
+        ls -R
+        echo "GitHub context:"
+        echo "${{ toJson(github) }}"
