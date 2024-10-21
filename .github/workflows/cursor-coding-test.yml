@@ -43,6 +43,48 @@ jobs:
         python3-pyelftools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx unzip \
         vim wget xmlto xxd zlib1g-dev
 
+    - name: 缓存
+      uses: actions/cache@v3
+      with:
+        path: openwrt/dl
+        key: ${{ runner.os }}-openwrt-${{ hashFiles('**/feeds.conf.default') }}
+        restore-keys: |
+          ${{ runner.os }}-openwrt-
+
+    - name: 克隆源码
+      run: |
+        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        ln -sf /workspaces/openwrt $GITHUB_WORKSPACE/openwrt
+
+    - name: 加载自定义资源
+      run: |
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
+        chmod +x $DIY_P1_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P1_SH
+
+    - name: 更新 feeds
+      run: cd openwrt && ./scripts/feeds update -a
+
+    - name: 安装 feeds
+      run: cd openwrt && ./scripts/feeds install -a
+
+    - name: 加载自定义配置
+      run: |
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        chmod +x $DIY_P2_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P2_SH
+
+    - name: 下载包
+      id: package
+      run: |
+        cd openwrt
+        make defconfig
+        make download -j8
+        find dl -size -1024c -exec ls -l {} \;
+        find dl -size -1024c -exec rm -f {} \;
+
     - name: 检查并安装 Go
       run: |
         if ! command -v go &> /dev/null || [[ $(go version) != *"go1.23"* ]]; then
