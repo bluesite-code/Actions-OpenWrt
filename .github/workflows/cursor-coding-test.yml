@@ -1,4 +1,4 @@
-name: Cursor-coding-test-2
+name: Cursor-coding-test
 
 on:
   workflow_dispatch:
