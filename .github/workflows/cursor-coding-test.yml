@@ -51,71 +51,8 @@ jobs:
     - name: 克隆源代码
       run: |
         git clone $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
-    - name: 调试 - 检查目录结构
-      run: |
-        echo "当前工作目录："
-        pwd
-        echo "列出当前目录内容："
-        ls -la
-        echo "列出 /workdir 目录内容（如果存在）："
-        ls -la /workdir || echo "/workdir 目录不存在"
-        echo "列出 $GITHUB_WORKSPACE 目录内容："
-        ls -la $GITHUB_WORKSPACE
-        echo "查找 openwrt 目录："
-        find / -name openwrt -type d 2>/dev/null || echo "未找到 openwrt 目录"
-
-    - name: 修改插件 Makefile
-      run: |
-        echo "当前工作目录: $(pwd)"
-        echo "列出 openwrt/package 目录内容:"
-        ls -l openwrt/package
-        
-        if [ -d "openwrt/package/alist" ]; then
-          cd openwrt/package/alist
-          if [ -f "Makefile" ]; then
-            sed -i 's/PKG_BUILD_DEPENDS:=golang\/host/PKG_BUILD_DEPENDS:=golang\/host @(GO_1_23)/' Makefile
-            echo "已修改 alist Makefile"
-          else
-            echo "警告: alist 目录中没有找到 Makefile"
-          fi
-          cd ../../..
-        else
-          echo "警告: alist 目录不存在"
-        fi
-        
-        if [ -d "openwrt/package/mosdns" ]; then
-          cd openwrt/package/mosdns
-          if [ -f "Makefile" ]; then
-            sed -i 's/PKG_BUILD_DEPENDS:=golang\/host/PKG_BUILD_DEPENDS:=golang\/host @(GO_1_23)/' Makefile
-            echo "已修改 mosdns Makefile"
-          else
-            echo "警告: mosdns 目录中没有找到 Makefile"
-          fi
-          cd ../../..
-        else
-          echo "警告: mosdns 目录不存在"
-        fi
-        
-        echo "修改完成，列出修改后的文件:"
-        find openwrt/package -name Makefile -exec grep "PKG_BUILD_DEPENDS:=golang" {} +
-
-    - name: 设置 OpenWrt Go 环境
-      run: |
-        cd openwrt
-        echo "export PATH=/usr/local/go/bin:$PATH" >> package/base-files/files/etc/profile
-        echo "export GOROOT=/usr/local/go" >> package/base-files/files/etc/profile
-        echo "export GOPATH=$HOME/go" >> package/base-files/files/etc/profile
-        echo "export GO111MODULE=on" >> package/base-files/files/etc/profile
-
-    - name: 处理 Go 依赖
-      run: |
-        cd openwrt
-        find . -name go.mod -execdir go mod tidy \;
-        find . -name go.mod -execdir go get \;
-
-    - name: 加载自定义资源
+    - name: 加载自定义 feeds
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
         chmod +x $DIY_P1_SH
@@ -123,33 +60,69 @@ jobs:
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
     - name: 更新 feeds
-      run: cd openwrt && ./scripts/feeds update -a
+      working-directory: openwrt
+      run: |
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
 
-    - name: 安装 feeds
-      run: cd openwrt && ./scripts/feeds install -a
+    - name: 修改插件 Makefile
+      working-directory: openwrt
+      run: |
+        echo "当前工作目录: $(pwd)"
+        echo "列出 package 目录内容:"
+        ls -l package
+        
+        if [ -d "package/alist" ]; then
+          cd package/alist
+          if [ -f "Makefile" ]; then
+            sed -i 's/PKG_BUILD_DEPENDS:=golang\/host/PKG_BUILD_DEPENDS:=golang\/host @(GO_1_23)/' Makefile
+            echo "已修改 alist Makefile"
+          else
+            echo "警告: alist 目录中没有找到 Makefile"
+          fi
+          cd ../..
+        else
+          echo "警告: alist 目录不存在"
+        fi
+        
+        if [ -d "package/mosdns" ]; then
+          cd package/mosdns
+          if [ -f "Makefile" ]; then
+            sed -i 's/PKG_BUILD_DEPENDS:=golang\/host/PKG_BUILD_DEPENDS:=golang\/host @(GO_1_23)/' Makefile
+            echo "已修改 mosdns Makefile"
+          else
+            echo "警告: mosdns 目录中没有找到 Makefile"
+          fi
+          cd ../..
+        else
+          echo "警告: mosdns 目录不存在"
+        fi
+        
+        echo "修改完成，列出修改后的文件:"
+        find package -name Makefile -exec grep "PKG_BUILD_DEPENDS:=golang" {} +
 
     - name: 加载自定义配置
       run: |
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
         chmod +x $DIY_P2_SH
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P2_SH 
+        $GITHUB_WORKSPACE/$DIY_P2_SH
 
     - name: 下载包
+      working-directory: openwrt
       run: |
-        cd openwrt
         make defconfig
         make download -j8
 
     - name: 编译 OpenWrt
+      working-directory: openwrt
       id: compile
       run: |
-        cd openwrt
         echo "系统 Go 版本："
         go version
         echo "OpenWrt 使用的 Go 版本："
         make toolchain/go/compile V=s
-        mmake -j$(nproc) || make -j1 || make -j1 V=sake -j$(nproc) || make -j1 V=s
+        make -j$(nproc) || make -j1 V=s
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 检查编译状态
