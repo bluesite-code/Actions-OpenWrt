@@ -54,6 +54,8 @@ jobs:
     - name: 修改插件 Makefile
       run: |
         echo "当前工作目录: $(pwd)"
+        echo "列出 openwrt/openwrt 目录内容:"
+        ls -l openwrt/openwrt
         echo "列出 openwrt/package 目录内容:"
         ls -l openwrt/package
         
