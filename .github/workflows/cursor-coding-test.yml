@@ -52,10 +52,19 @@ jobs:
       run: |
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
-        echo "当前工作目录: $(pwd)"
-        echo "列出 openwrt 目录内容:
-        ls -l openwrt
-        
+
+    - name: 调试 - 检查目录结构
+      run: |
+        echo "当前工作目录："
+        pwd
+        echo "列出当前目录内容："
+        ls -la
+        echo "列出 /workdir 目录内容（如果存在）："
+        ls -la /workdir || echo "/workdir 目录不存在"
+        echo "列出 $GITHUB_WORKSPACE 目录内容："
+        ls -la $GITHUB_WORKSPACE
+        echo "查找 openwrt 目录："
+        find / -name openwrt -type d 2>/dev/null || echo "未找到 openwrt 目录"
 
     - name: 修改插件 Makefile
       run: |
