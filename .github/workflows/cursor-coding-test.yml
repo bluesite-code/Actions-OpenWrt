@@ -30,7 +30,7 @@ jobs:
     
     steps:
     - name: 检出代码
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: 初始化环境
       env:
@@ -53,10 +53,28 @@ jobs:
 
     - name: 修改插件 Makefile
       run: |
-        cd openwrt/package/alist
-        sed -i 's/PKG_BUILD_DEPENDS:=golang\/host/PKG_BUILD_DEPENDS:=golang\/host @(GO_1_23)/' Makefile
-        cd ../luci-app-mosdns
-        sed -i 's/PKG_BUILD_DEPENDS:=golang\/host/PKG_BUILD_DEPENDS:=golang\/host @(GO_1_23)/' Makefile
+        echo "当前工作目录: $(pwd)"
+        echo "列出 openwrt 目录内容:"
+        ls -R openwrt
+        
+        if [ -d "openwrt/package/alist" ]; then
+          cd openwrt/package/alist
+          sed -i 's/PKG_BUILD_DEPENDS:=golang\/host/PKG_BUILD_DEPENDS:=golang\/host @(GO_1_23)/' Makefile
+          echo "已修改 alist Makefile"
+        else
+          echo "警告: alist 目录不存在"
+        fi
+        
+        if [ -d "openwrt/package/mosdns" ]; then
+          cd openwrt/package/mosdns
+          sed -i 's/PKG_BUILD_DEPENDS:=golang\/host/PKG_BUILD_DEPENDS:=golang\/host @(GO_1_23)/' Makefile
+          echo "已修改 luci-app-mosdns Makefile"
+        else
+          echo "警告: mosdns 目录不存在"
+        fi
+        
+        echo "修改完成，列出修改后的文件:"
+        find openwrt/package -name Makefile -exec grep "PKG_BUILD_DEPENDS:=golang" {} +
 
     - name: 设置 OpenWrt Go 环境
       run: |
