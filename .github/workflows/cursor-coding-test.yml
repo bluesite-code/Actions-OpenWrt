@@ -48,20 +48,6 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workspaces/openwrt $GITHUB_WORKSPACE/openwrt
 
-    - name: 缓存
-      uses: actions/cache@v3
-      with:
-        path: |
-          openwrt/dl
-          openwrt/build_dir/host
-          openwrt/build_dir/toolchain-*
-          openwrt/staging_dir
-        key: ${{ runner.os }}-openwrt-${{ hashFiles('**/feeds.conf.default', '.config') }}-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-openwrt-${{ hashFiles('**/feeds.conf.default', '.config') }}-
-          ${{ runner.os }}-openwrt-
-        max-size: 10GB
-
     - name: 加载自定义资源
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
