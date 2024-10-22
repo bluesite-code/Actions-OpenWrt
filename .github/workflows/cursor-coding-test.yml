@@ -26,11 +26,11 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     
     steps:
     - name: 检出代码
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
     - name: 初始化环境
       env:
@@ -46,10 +46,31 @@ jobs:
         python3-pyelftools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx unzip \
         vim wget xmlto xxd zlib1g-dev libfuse-dev
 
-    - name: 克隆源码
+    - name: 克隆源代码
       run: |
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workspaces/openwrt $GITHUB_WORKSPACE/openwrt
+
+    - name: 修改插件 Makefile
+      run: |
+        cd openwrt/package/luci-app-alist
+        sed -i 's/PKG_BUILD_DEPENDS:=golang\/host/PKG_BUILD_DEPENDS:=golang\/host @(GO_1_23)/' Makefile
+        cd ../luci-app-mosdns
+        sed -i 's/PKG_BUILD_DEPENDS:=golang\/host/PKG_BUILD_DEPENDS:=golang\/host @(GO_1_23)/' Makefile
+
+    - name: 设置 OpenWrt Go 环境
+      run: |
+        cd openwrt
+        echo "export PATH=/usr/local/go/bin:$PATH" >> package/base-files/files/etc/profile
+        echo "export GOROOT=/usr/local/go" >> package/base-files/files/etc/profile
+        echo "export GOPATH=$HOME/go" >> package/base-files/files/etc/profile
+        echo "export GO111MODULE=on" >> package/base-files/files/etc/profile
+
+    - name: 处理 Go 依赖
+      run: |
+        cd openwrt
+        find . -name go.mod -execdir go mod tidy \;
+        find . -name go.mod -execdir go get \;
 
     - name: 加载自定义资源
       run: |
@@ -69,63 +90,24 @@ jobs:
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
         chmod +x $DIY_P2_SH
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P2_SH
+        $GITHUB_WORKSPACE/$DIY_P2_SH 
 
     - name: 下载包
-      id: package
       run: |
         cd openwrt
         make defconfig
         make download -j8
-        find dl -size -1024c -exec ls -l {} \;
-        find dl -size -1024c -exec rm -f {} \;
-
-    - name: 检查并安装 Go
-      run: |
-        if ! command -v go &> /dev/null || [[ $(go version) != *"go1.23"* ]]; then
-          echo "安装 Go 1.23.2..."
-          wget https://go.dev/dl/go1.23.2.linux-amd64.tar.gz
-          sudo rm -rf /usr/local/go
-          sudo tar -C /usr/local -xzf go1.23.2.linux-amd64.tar.gz
-          echo "GOROOT=/usr/local/go" >> $GITHUB_ENV
-          echo "PATH=/usr/local/go/bin:$PATH" >> $GITHUB_ENV
-        else
-          echo "Go 1.23 已安装，版本为："
-          go version
-        fi
-
-    - name: 设置 Go 环境变量
-      run: |
-        echo "GOTOOLCHAIN=go1.23.0" >> $GITHUB_ENV
-        echo "GO111MODULE=on" >> $GITHUB_ENV
-
-    - name: 验证 Go 环境
-      run: |
-        go version
-        go env
-
-    - name: 处理 Go 依赖
-      run: |
-        cd openwrt
-        find . -name go.mod -execdir go mod tidy \;
-        find . -name go.mod -execdir go get \;
 
     - name: 编译 OpenWrt
       id: compile
       run: |
         cd openwrt
-        echo -e "$(nproc) 线程编译"
-        make -j$(nproc) || make -j1 || make -j1 V=s
+        echo "系统 Go 版本："
+        go version
+        echo "OpenWrt 使用的 Go 版本："
+        make toolchain/go/compile V=s
+        mmake -j$(nproc) || make -j1 || make -j1 V=sake -j$(nproc) || make -j1 V=s
         echo "status=success" >> $GITHUB_OUTPUT
-        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
-        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
-        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
-
-    - name: 检查编译状态
-      if: steps.compile.outputs.status != 'success'
-      run: |
-        echo "编译失败，请检查日志"
-        exit 1
 
     - name: 检查编译状态
       if: steps.compile.outputs.status != 'success'
@@ -153,7 +135,7 @@ jobs:
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         touch release.txt
         echo "发布于 $(date +"%Y.%m.%d-%H:%M")" >> release.txt
-        echo "::set-output name=status::success"
+        echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传固件到 Release
       uses: softprops/action-gh-release@v1
