@@ -20,6 +20,9 @@ env:
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
   TZ: Asia/Shanghai
+  UPLOAD_BIN_DIR: false
+  UPLOAD_FIRMWARE: true
+  UPLOAD_RELEASE: true
 
 jobs:
   build:
@@ -108,11 +111,19 @@ jobs:
         find . -name go.mod -execdir go get \;
 
     - name: 编译 OpenWrt
+      id: compile
       run: |
         cd openwrt
         make defconfig
         make download -j8
-        make V=s -j$(nproc)
+        make -j$(nproc) || make -j1 V=s
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 检查编译状态
+      if: steps.compile.outputs.status != 'success'
+      run: |
+        echo "编译失败，请检查日志"
+        exit 1
 
     - name: 检查空间使用情况
       if: always()
