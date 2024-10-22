@@ -53,7 +53,7 @@ jobs:
 
     - name: 修改插件 Makefile
       run: |
-        cd openwrt/package/luci-app-alist
+        cd openwrt/package/alist
         sed -i 's/PKG_BUILD_DEPENDS:=golang\/host/PKG_BUILD_DEPENDS:=golang\/host @(GO_1_23)/' Makefile
         cd ../luci-app-mosdns
         sed -i 's/PKG_BUILD_DEPENDS:=golang\/host/PKG_BUILD_DEPENDS:=golang\/host @(GO_1_23)/' Makefile
