@@ -193,7 +193,6 @@ jobs:
         cat .config
         echo "检查 feeds.conf.default 文件："
         cat feeds.conf.default
-        # 检查���他可能影响编译的关键文件
 
     - name: 清理旧的缓存
       uses: actions/github-script@v6
