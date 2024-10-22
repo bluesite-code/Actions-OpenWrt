@@ -45,17 +45,18 @@ jobs:
         mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python3 python3-pip python3-ply \
         python3-pyelftools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx unzip \
         vim wget xmlto xxd zlib1g-dev libfuse-dev
+        sudo mkdir -p /workdir
+        sudo chown $USER:$GROUPS /workdir
 
     - name: 克隆源代码
+      working-directory: /workdir
       run: |
         git clone $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf /workspaces/openwrt $GITHUB_WORKSPACE/openwrt
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
     - name: 修改插件 Makefile
       run: |
         echo "当前工作目录: $(pwd)"
-        echo "列出 openwrt/openwrt 目录内容:"
-        ls -l openwrt/openwrt
         echo "列出 openwrt/package 目录内容:"
         ls -l openwrt/package
         
