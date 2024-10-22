@@ -1,4 +1,4 @@
-name: Cursor-coding-test-2
+name: Cursor-coding-test
 
 on:
   workflow_dispatch:
@@ -60,7 +60,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-openwrt-${{ hashFiles('**/feeds.conf.default', '.config') }}-
           ${{ runner.os }}-openwrt-
-        max-size: 10GB
 
     - name: 加载自定义资源
       run: |
@@ -194,4 +193,24 @@ jobs:
         cat .config
         echo "检查 feeds.conf.default 文件："
         cat feeds.conf.default
-        # 检查其他可能影响编译的关键文件
+        # 检查���他可能影响编译的关键文件
+
+    - name: 清理旧的缓存
+      uses: actions/github-script@v6
+      if: always()
+      with:
+        script: |
+          const caches = await github.rest.actions.getActionsCacheList({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          })
+          for (const cache of caches.data.actions_caches) {
+            if (cache.key.startsWith('${{ runner.os }}-openwrt-') && cache.key !== '${{ runner.os }}-openwrt-${{ hashFiles('**/feeds.conf.default', '.config') }}-${{ github.sha }}') {
+              console.log('Deleting cache:', cache.key)
+              await github.rest.actions.deleteActionsCacheById({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                cache_id: cache.id,
+              })
+            }
+          }
