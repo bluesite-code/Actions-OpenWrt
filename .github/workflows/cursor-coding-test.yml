@@ -1,4 +1,4 @@
-name: Cursor-coding-test
+name: Cursor-coding-test-2
 
 on:
   workflow_dispatch:
@@ -41,7 +41,7 @@ jobs:
         libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz \
         mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python3 python3-pip python3-ply \
         python3-pyelftools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx unzip \
-        vim wget xmlto xxd zlib1g-dev
+        vim wget xmlto xxd zlib1g-dev libfuse-dev
 
     - name: 克隆源码
       run: |
@@ -51,10 +51,16 @@ jobs:
     - name: 缓存
       uses: actions/cache@v3
       with:
-        path: openwrt/dl
-        key: ${{ runner.os }}-openwrt-${{ hashFiles('**/feeds.conf.default') }}
+        path: |
+          openwrt/dl
+          openwrt/build_dir/host
+          openwrt/build_dir/toolchain-*
+          openwrt/staging_dir
+        key: ${{ runner.os }}-openwrt-${{ hashFiles('**/feeds.conf.default', '.config') }}-${{ github.sha }}
         restore-keys: |
+          ${{ runner.os }}-openwrt-${{ hashFiles('**/feeds.conf.default', '.config') }}-
           ${{ runner.os }}-openwrt-
+        max-size: 10GB
 
     - name: 加载自定义资源
       run: |
