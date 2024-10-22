@@ -54,21 +54,31 @@ jobs:
     - name: 修改插件 Makefile
       run: |
         echo "当前工作目录: $(pwd)"
-        echo "列出 openwrt 目录内容:"
-        ls -R openwrt
+        echo "列出 openwrt/package 目录内容:"
+        ls -l openwrt/package
         
         if [ -d "openwrt/package/alist" ]; then
           cd openwrt/package/alist
-          sed -i 's/PKG_BUILD_DEPENDS:=golang\/host/PKG_BUILD_DEPENDS:=golang\/host @(GO_1_23)/' Makefile
-          echo "已修改 alist Makefile"
+          if [ -f "Makefile" ]; then
+            sed -i 's/PKG_BUILD_DEPENDS:=golang\/host/PKG_BUILD_DEPENDS:=golang\/host @(GO_1_23)/' Makefile
+            echo "已修改 alist Makefile"
+          else
+            echo "警告: alist 目录中没有找到 Makefile"
+          fi
+          cd ../../..
         else
           echo "警告: alist 目录不存在"
         fi
         
         if [ -d "openwrt/package/mosdns" ]; then
           cd openwrt/package/mosdns
-          sed -i 's/PKG_BUILD_DEPENDS:=golang\/host/PKG_BUILD_DEPENDS:=golang\/host @(GO_1_23)/' Makefile
-          echo "已修改 luci-app-mosdns Makefile"
+          if [ -f "Makefile" ]; then
+            sed -i 's/PKG_BUILD_DEPENDS:=golang\/host/PKG_BUILD_DEPENDS:=golang\/host @(GO_1_23)/' Makefile
+            echo "已修改 mosdns Makefile"
+          else
+            echo "警告: mosdns 目录中没有找到 Makefile"
+          fi
+          cd ../../..
         else
           echo "警告: mosdns 目录不存在"
         fi
