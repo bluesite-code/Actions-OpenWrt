@@ -10,7 +10,7 @@ on:
         type: choice
         options:
         - '.config'
-        - 'custom.config'
+        - 'test.config'
 
 env:
   REPO_URL: https://github.com/openwrt/openwrt
