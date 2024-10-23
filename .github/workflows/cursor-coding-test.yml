@@ -31,8 +31,6 @@ jobs:
     steps:
     - name: 检出代码
       uses: actions/checkout@main
-      with:
-        fetch-depth: 0
 
     - name: 安装 OpenWrt SDK
       uses: openwrt-gh-action-sdk@go1.23
