@@ -60,9 +60,6 @@ jobs:
         chmod +x $DIY_P1_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
-   
-    - name: 安装OpenWrt SDK
-      uses: sbwml/openwrt-gh-action-sdk@go1.23
 
     - name: 更新 feeds
       working-directory: openwrt
@@ -70,6 +67,9 @@ jobs:
         git pull
         ./scripts/feeds update -a
         ./scripts/feeds install -a
+
+    - name: 安装OpenWrt SDK
+      uses: sbwml/openwrt-gh-action-sdk@go1.23
 
     - name: 加载自定义配置
       run: |
