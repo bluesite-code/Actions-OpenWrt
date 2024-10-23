@@ -31,6 +31,7 @@ jobs:
           const cleanupOption = '${{ inputs.cleanup_option }}';
           const keepGlobal = cleanupOption === '所有工作流下，只保留最近2个';
           const keepLatest = keepGlobal ? 2 : 3;
+          const currentWorkflowName = 'Repository Cleanup';
           
           console.log(`清理选项: ${cleanupOption}`);
           console.log(`保留数量: ${keepLatest}`);
@@ -43,8 +44,12 @@ jobs:
           
           let allRuns = [];
 
-          // 收集所有工作流的运行记录
+          // 收集所有工作流的运行记录，排除当前的 Repository Cleanup 工作流
           for (const workflow of workflows.workflows) {
+            if (workflow.name === currentWorkflowName) {
+              console.log(`跳过当前工作流: ${workflow.name} (ID: ${workflow.id})`);
+              continue;
+            }
             console.log(`收集工作流运行记录: ${workflow.name} (ID: ${workflow.id})`);
             let page = 1;
             
@@ -66,7 +71,7 @@ jobs:
             }
           }
 
-          console.log(`总共收集到 ${allRuns.length} 个运行记录`);
+          console.log(`总共收集到 ${allRuns.length} 个运行记录（不包括 ${currentWorkflowName}）`);
 
           // 按创建时间排序所有运行记录
           allRuns.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -226,3 +231,4 @@ jobs:
             }
           }
           console.log(`删除了 ${deletedCount} 个未关联的标签`);
+
