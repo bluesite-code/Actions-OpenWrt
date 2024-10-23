@@ -34,9 +34,6 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: 安装OpenWrt SDK
-      uses: sbwml/openwrt-gh-action-sdk@go1.23
-
     - name: 初始化环境
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -63,6 +60,9 @@ jobs:
         chmod +x $DIY_P1_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
+   
+    - name: 安装OpenWrt SDK
+      uses: sbwml/openwrt-gh-action-sdk@go1.23
 
     - name: 更新 feeds
       working-directory: openwrt
