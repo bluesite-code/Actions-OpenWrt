@@ -90,20 +90,37 @@ jobs:
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        if grep -q 'CONFIG_PACKAGE_golang=y' .config || grep -q 'CONFIG_PACKAGE_golang-src=y' .config; then
-          echo "检测到 Go 包，使用 Go SDK 编译"
-          # 这里应该使用正确的方式来设置 Go 环境
-          # 例如，可以使用 actions/setup-go 来设置 Go 环境
-          # 或者手动安装所需的 Go 版本
-          # 以下是一个示例：
-          wget https://golang.org/dl/go1.23.linux-amd64.tar.gz
-          sudo tar -C /usr/local -xzf go1.23.linux-amd64.tar.gz
-          export PATH=$PATH:/usr/local/go/bin
-          go version
+        
+        # 创建一个需要特殊 Go 环境的包列表
+        GO_PACKAGES="alist mosdns"
+        NEED_GO_SDK=false
+        
+        # 检查是否有需要特殊 Go 环境的包
+        for package in $GO_PACKAGES; do
+          if grep -q "CONFIG_PACKAGE_$package=y" .config; then
+            NEED_GO_SDK=true
+            break
+          fi
+        done
+        
+        if [ "$NEED_GO_SDK" = true ]; then
+          echo "检测到需要特殊 Go 环境的包，使用 sbwml/openwrt-gh-action-sdk 编译"
+          if docker pull sbwml/openwrt-gh-action-sdk:go1.23; then
+            docker run --rm -v $PWD:/workdir sbwml/openwrt-gh-action-sdk:go1.23 \
+              sh -c "cd /workdir && make defconfig && make download -j8 && make -j$(nproc) || make -j1 V=s"
+          else
+            echo "无法拉取 sbwml/openwrt-gh-action-sdk:go1.23，回退到标准编译"
+            make defconfig
+            make download -j8
+            make -j$(nproc) || make -j1 || make -j1 V=s
+          fi
         else
-          echo "未检测到 Go 包，使用标准编译"
+          echo "未检测到需要特殊 Go 环境的包，使用标准编译"
+          make defconfig
+          make download -j8
+          make -j$(nproc) || make -j1 || make -j1 V=s
         fi
-        make -j$(nproc) || make -j1 || make -j1 V=s
+        
         echo "status=success" >> $GITHUB_OUTPUT
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=$(cat DEVICE_NAME)" >> $GITHUB_OUTPUT
