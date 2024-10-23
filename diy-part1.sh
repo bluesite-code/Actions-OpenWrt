@@ -13,7 +13,8 @@ git clone https://github.com/kenzok78/luci-app-fileassistant package/luci-app-fi
 
 # 克隆 luci-app-alist 及其依赖
 rm -rf feeds/packages/lang/golang
-git clone https://github.com/kenzok8/golang feeds/packages/lang/golang
+#git clone https://github.com/kenzok8/golang feeds/packages/lang/golang
+git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
 git clone https://github.com/sbwml/luci-app-alist package/alist
 
 # 克隆 luci-app-mosdns 及其依赖
