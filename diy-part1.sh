@@ -12,8 +12,8 @@ git clone https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-a
 git clone https://github.com/kenzok78/luci-app-fileassistant package/luci-app-fileassistant
 
 # 克隆 luci-app-alist 及其依赖
-rm -rf feeds/packages/lang/golang
-git clone https://github.com/kenzok8/golang feeds/packages/lang/golang
+#rm -rf feeds/packages/lang/golang
+#git clone https://github.com/kenzok8/golang feeds/packages/lang/golang
 git clone https://github.com/sbwml/luci-app-alist package/alist
 
 # 克隆 luci-app-mosdns 及其依赖
