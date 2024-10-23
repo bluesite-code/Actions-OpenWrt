@@ -30,26 +30,12 @@ jobs:
     
     steps:
     - name: 检出代码
-      uses: actions/checkout@v4
-
-    - name: 设置 Go
-      uses: actions/setup-go@v4
+      uses: actions/checkout@main
       with:
-        go-version: '1.23'
-
-    - name: 验证 Go 环境
-      run: |
-        go version
-        go env
+        fetch-depth: 0
 
     - name: 安装 OpenWrt SDK
-      run: |
-        # 这里添加安装 OpenWrt SDK 的命令
-        # 例如：
-        # wget https://downloads.openwrt.org/releases/23.05.0/targets/x86/64/openwrt-sdk-23.05.0-x86-64_gcc-12.3.0_musl.Linux-x86_64.tar.xz
-        # tar xJf openwrt-sdk-23.05.0-x86-64_gcc-12.3.0_musl.Linux-x86_64.tar.xz
-        # cd openwrt-sdk-23.05.0-x86-64_gcc-12.3.0_musl.Linux-x86_64
-        # 根据实际情况调整上述命令
+      uses: openwrt-gh-action-sdk@go1.23
 
     - name: 初始化环境
       env:
@@ -81,6 +67,7 @@ jobs:
     - name: 更新 feeds
       working-directory: openwrt
       run: |
+        git pull
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
