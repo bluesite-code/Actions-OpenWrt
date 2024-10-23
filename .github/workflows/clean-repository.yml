@@ -32,9 +32,11 @@ jobs:
           const keepGlobal = cleanupOption === '所有工作流下，只保留最近2个';
           const keepLatest = keepGlobal ? 2 : 3;
           const currentWorkflowName = 'Repository Cleanup';
+          const currentWorkflowKeep = 2; // Repository Cleanup 工作流始终保留最近 2 个记录
           
           console.log(`清理选项: ${cleanupOption}`);
-          console.log(`保留数量: ${keepLatest}`);
+          console.log(`其他工作流保留数量: ${keepLatest}`);
+          console.log(`${currentWorkflowName} 工作流保留数量: ${currentWorkflowKeep}`);
 
           const { data: workflows } = await github.rest.actions.listRepoWorkflows({
             owner: context.repo.owner,
@@ -43,13 +45,10 @@ jobs:
           console.log(`找到 ${workflows.total_count} 个工作流`);
           
           let allRuns = [];
+          let cleanupWorkflowRuns = [];
 
-          // 收集所有工作流的运行记录，排除当前的 Repository Cleanup 工作流
+          // 收集所有工作流的运行记录，单独处理 Repository Cleanup 工作流
           for (const workflow of workflows.workflows) {
-            if (workflow.name === currentWorkflowName) {
-              console.log(`跳过当前工作流: ${workflow.name} (ID: ${workflow.id})`);
-              continue;
-            }
             console.log(`收集工作流运行记录: ${workflow.name} (ID: ${workflow.id})`);
             let page = 1;
             
@@ -64,24 +63,53 @@ jobs:
               
               if (runs.workflow_runs.length === 0) break;
               
-              allRuns = allRuns.concat(runs.workflow_runs);
+              if (workflow.name === currentWorkflowName) {
+                cleanupWorkflowRuns = cleanupWorkflowRuns.concat(runs.workflow_runs);
+              } else {
+                allRuns = allRuns.concat(runs.workflow_runs);
+              }
               
               page++;
               if (runs.workflow_runs.length < 100) break;  // 没有更多页面
             }
           }
 
-          console.log(`总共收集到 ${allRuns.length} 个运行记录（不包括 ${currentWorkflowName}）`);
+          console.log(`总共收集到 ${allRuns.length} 个其他工作流运行记录`);
+          console.log(`收集到 ${cleanupWorkflowRuns.length} 个 ${currentWorkflowName} 工作流运行记录`);
 
           // 按创建时间排序所有运行记录
           allRuns.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          cleanupWorkflowRuns.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
           let totalKept = 0;
           let totalDeleted = 0;
 
+          // 处理 Repository Cleanup 工作流
+          const cleanupRunsToKeep = cleanupWorkflowRuns.slice(0, currentWorkflowKeep);
+          const cleanupRunsToDelete = cleanupWorkflowRuns.slice(currentWorkflowKeep);
+
+          for (const run of cleanupRunsToKeep) {
+            console.log(`保留 ${currentWorkflowName} 工作流运行记录: ${run.id}`);
+            totalKept++;
+          }
+
+          for (const run of cleanupRunsToDelete) {
+            try {
+              await github.rest.actions.deleteWorkflowRun({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: run.id,
+              });
+              console.log(`删除 ${currentWorkflowName} 工作流运行记录: ${run.id}`);
+              totalDeleted++;
+            } catch (error) {
+              console.error(`删除 ${currentWorkflowName} 工作流运行记录 ${run.id} 时出错: ${error.message}`);
+            }
+          }
+
+          // 处理其他工作流
           if (keepGlobal) {
-            console.log('执行全局保留策略');
-            // 保留所有工作流中最近的2个运行记录
+            console.log('执行全局保留策略（对其他工作流）');
             const runsToKeep = allRuns.slice(0, keepLatest);
             const runsToDelete = allRuns.slice(keepLatest);
 
@@ -104,8 +132,7 @@ jobs:
               }
             }
           } else {
-            console.log('执行每个工作流保留策略');
-            // 为每个工作流保留最近的3个运行记录
+            console.log('执行每个工作流保留策略（对其他工作流）');
             const workflowRuns = {};
             for (const run of allRuns) {
               if (!workflowRuns[run.workflow_id]) {
