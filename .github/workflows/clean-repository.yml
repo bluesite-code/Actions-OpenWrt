@@ -29,17 +29,18 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           const cleanupOption = '${{ inputs.cleanup_option }}';
-          const keepGlobal = cleanupOption === '所有工作流下，保留最近2个';
+          const keepGlobal = cleanupOption === '所有工作流下，只保留最近2个';
           const keepLatest = keepGlobal ? 2 : 3;
           
+          console.log(`清理选项: ${cleanupOption}`);
+          console.log(`保留数量: ${keepLatest}`);
+
           const { data: workflows } = await github.rest.actions.listRepoWorkflows({
             owner: context.repo.owner,
             repo: context.repo.repo,
           });
           console.log(`找到 ${workflows.total_count} 个工作流`);
           
-          let totalKept = 0;
-          let totalDeleted = 0;
           let allRuns = [];
 
           // 收集所有工作流的运行记录
@@ -65,10 +66,16 @@ jobs:
             }
           }
 
+          console.log(`总共收集到 ${allRuns.length} 个运行记录`);
+
           // 按创建时间排序所有运行记录
           allRuns.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
+          let totalKept = 0;
+          let totalDeleted = 0;
+
           if (keepGlobal) {
+            console.log('执行全局保留策略');
             // 保留所有工作流中最近的2个运行记录
             const runsToKeep = allRuns.slice(0, keepLatest);
             const runsToDelete = allRuns.slice(keepLatest);
@@ -92,6 +99,7 @@ jobs:
               }
             }
           } else {
+            console.log('执行每个工作流保留策略');
             // 为每个工作流保留最近的3个运行记录
             const workflowRuns = {};
             for (const run of allRuns) {
@@ -102,6 +110,7 @@ jobs:
             }
 
             for (const [workflowId, runs] of Object.entries(workflowRuns)) {
+              console.log(`处理工作流 ID ${workflowId}, 共有 ${runs.length} 个运行记录`);
               const runsToKeep = runs.slice(0, keepLatest);
               const runsToDelete = runs.slice(keepLatest);
 
