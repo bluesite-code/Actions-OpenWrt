@@ -11,11 +11,6 @@ on:
         options:
         - '.config'
         - 'test.config'
-      use_go_sdk:
-        description: '使用 Go SDK'
-        required: true
-        type: boolean
-        default: false
 
 env:
   REPO_URL: https://github.com/openwrt/openwrt
@@ -90,34 +85,25 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
-    - name: 编译 OpenWrt（标准）
-      if: github.event.inputs.use_go_sdk == 'false'
-      id: compile_standard
+    - name: 编译 OpenWrt
+      id: compile
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        make -j$(nproc) || make -j1 || make -j1 V=s
+        if [ -d "feeds/packages/lang/golang" ] || grep -q 'CONFIG_PACKAGE_golang=y' .config; then
+          echo "检测到 Go 包，使用 Go SDK 编译"
+          sbwml/openwrt-gh-action-sdk@go1.23 make -j$(nproc) || make -j1 || make -j1 V=s
+        else
+          echo "未检测到需要 Go SDK，使用标准编译"
+          make -j$(nproc) || make -j1 || make -j1 V=s
+        fi
         echo "status=success" >> $GITHUB_OUTPUT
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=$(cat DEVICE_NAME)" >> $GITHUB_OUTPUT
         echo "FILE_DATE=$(date +"%Y%m%d%H%M")" >> $GITHUB_OUTPUT
 
-    - name: 编译 OpenWrt（使用 Go SDK）
-      if: github.event.inputs.use_go_sdk == 'true'
-      id: compile_go_sdk
-      uses: sbwml/openwrt-gh-action-sdk@go1.23
-      with:
-        command: |
-          cd openwrt
-          echo -e "$(nproc) thread compile"
-          make -j$(nproc) || make -j1 || make -j1 V=s
-          echo "status=success" >> $GITHUB_OUTPUT
-          grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
-          [ -s DEVICE_NAME ] && echo "DEVICE_NAME=$(cat DEVICE_NAME)" >> $GITHUB_OUTPUT
-          echo "FILE_DATE=$(date +"%Y%m%d%H%M")" >> $GITHUB_OUTPUT
-
     - name: 检查编译状态
-      if: steps.compile_standard.outputs.status != 'success'
+      if: steps.compile.outputs.status != 'success'
       run: |
         echo "编译失败，请检查日志"
         exit 1
@@ -165,8 +151,8 @@ jobs:
         echo "release_tag=${{ steps.generate_name.outputs.FIRMWARE_PREFIX }}" >> $GITHUB_OUTPUT
         touch release.txt
         echo "发布标签: ${{ steps.generate_name.outputs.FIRMWARE_PREFIX }}" >> release.txt
-        echo "固件包含设备: ${{ steps.compile_standard.outputs.DEVICE_NAME }}" >> release.txt
-        echo "编译时间: ${{ steps.compile_standard.outputs.FILE_DATE }}" >> release.txt
+        echo "固件包含设备: ${{ steps.compile.outputs.DEVICE_NAME }}" >> release.txt
+        echo "编译时间: ${{ steps.compile.outputs.FILE_DATE }}" >> release.txt
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传固件到发布
