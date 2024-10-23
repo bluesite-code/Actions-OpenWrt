@@ -2,6 +2,15 @@ name: Repository Cleanup
 
 on:
   workflow_dispatch:
+    inputs:
+      cleanup_option:
+        description: '选择清理选项'
+        required: true
+        type: choice
+        options:
+        - '所有工作流下，只保留最近2个'
+        - '各个工作流下，各保留最近3个'
+        default: '各个工作流下，各保留最近3个'
 
 jobs:
   cleanup:
@@ -11,25 +20,32 @@ jobs:
       contents: write
 
     steps:
-    - name: Checkout code
+    - name: 检出代码
       uses: actions/checkout@v4
 
-    - name: List and delete old workflow runs
+    - name: 列出并删除旧的工作流运行记录
       uses: actions/github-script@v6
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
+          const cleanupOption = '${{ inputs.cleanup_option }}';
+          const keepGlobal = cleanupOption === '所有工作流下，保留最近2个';
+          const keepLatest = keepGlobal ? 2 : 3;
+          
           const { data: workflows } = await github.rest.actions.listRepoWorkflows({
             owner: context.repo.owner,
             repo: context.repo.repo,
           });
-          console.log(`Found ${workflows.total_count} workflows`);
+          console.log(`找到 ${workflows.total_count} 个工作流`);
           
+          let totalKept = 0;
           let totalDeleted = 0;
+          let allRuns = [];
+
+          // 收集所有工作流的运行记录
           for (const workflow of workflows.workflows) {
-            console.log(`Processing workflow: ${workflow.name} (ID: ${workflow.id})`);
+            console.log(`收集工作流运行记录: ${workflow.name} (ID: ${workflow.id})`);
             let page = 1;
-            let deletedForWorkflow = 0;
             
             while (true) {
               const { data: runs } = await github.rest.actions.listWorkflowRuns({
@@ -42,9 +58,58 @@ jobs:
               
               if (runs.workflow_runs.length === 0) break;
               
-              console.log(`  Found ${runs.workflow_runs.length} runs on page ${page}`);
+              allRuns = allRuns.concat(runs.workflow_runs);
               
-              const runsToDelete = runs.workflow_runs.slice(3);  // Keep the latest 3 runs
+              page++;
+              if (runs.workflow_runs.length < 100) break;  // 没有更多页面
+            }
+          }
+
+          // 按创建时间排序所有运行记录
+          allRuns.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+          if (keepGlobal) {
+            // 保留所有工作流中最近的2个运行记录
+            const runsToKeep = allRuns.slice(0, keepLatest);
+            const runsToDelete = allRuns.slice(keepLatest);
+
+            for (const run of runsToKeep) {
+              console.log(`保留运行记录: ${run.id} (工作流: ${run.name})`);
+              totalKept++;
+            }
+
+            for (const run of runsToDelete) {
+              try {
+                await github.rest.actions.deleteWorkflowRun({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  run_id: run.id,
+                });
+                console.log(`删除运行记录: ${run.id} (工作流: ${run.name})`);
+                totalDeleted++;
+              } catch (error) {
+                console.error(`删除运行记录 ${run.id} 时出错: ${error.message}`);
+              }
+            }
+          } else {
+            // 为每个工作流保留最近的3个运行记录
+            const workflowRuns = {};
+            for (const run of allRuns) {
+              if (!workflowRuns[run.workflow_id]) {
+                workflowRuns[run.workflow_id] = [];
+              }
+              workflowRuns[run.workflow_id].push(run);
+            }
+
+            for (const [workflowId, runs] of Object.entries(workflowRuns)) {
+              const runsToKeep = runs.slice(0, keepLatest);
+              const runsToDelete = runs.slice(keepLatest);
+
+              for (const run of runsToKeep) {
+                console.log(`保留工作流 ${run.name} 的运行记录 ${run.id}`);
+                totalKept++;
+              }
+
               for (const run of runsToDelete) {
                 try {
                   await github.rest.actions.deleteWorkflowRun({
@@ -52,24 +117,19 @@ jobs:
                     repo: context.repo.repo,
                     run_id: run.id,
                   });
-                  console.log(`  Deleted run ${run.id} of workflow ${workflow.name}`);
-                  deletedForWorkflow++;
+                  console.log(`删除工作流 ${run.name} 的运行记录 ${run.id}`);
                   totalDeleted++;
                 } catch (error) {
-                  console.error(`  Error deleting run ${run.id}: ${error.message}`);
+                  console.error(`删除运行记录 ${run.id} 时出错: ${error.message}`);
                 }
               }
-              
-              page++;
-              if (runs.workflow_runs.length < 100) break;  // No more pages
             }
-            
-            console.log(`  Deleted ${deletedForWorkflow} runs for workflow ${workflow.name}`);
           }
           
-          console.log(`Total deleted workflow runs: ${totalDeleted}`);
+          console.log(`总共保留的工作流运行记录数: ${totalKept}`);
+          console.log(`总共删除的工作流运行记录数: ${totalDeleted}`);
 
-    - name: Delete unassociated releases
+    - name: 删除未关联的发布
       uses: actions/github-script@v6
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -78,7 +138,7 @@ jobs:
             owner: context.repo.owner,
             repo: context.repo.repo,
           });
-          console.log(`Found ${releases.length} releases`);
+          console.log(`找到 ${releases.length} 个发布`);
           
           const releasesToKeep = 3; // 保留最新的3个发布
           let deletedCount = 0;
@@ -92,7 +152,7 @@ jobs:
                   repo: context.repo.repo,
                   release_id: release.id,
                 });
-                console.log(`Deleted release: ${release.name || release.tag_name}`);
+                console.log(`删除了发布: ${release.name || release.tag_name}`);
                 deletedCount++;
                 
                 // 如果发布有关联的标签，也删除标签
@@ -103,20 +163,20 @@ jobs:
                       repo: context.repo.repo,
                       ref: `tags/${release.tag_name}`,
                     });
-                    console.log(`Deleted associated tag: ${release.tag_name}`);
+                    console.log(`删除了关联的标签: ${release.tag_name}`);
                   } catch (tagError) {
-                    console.error(`Error deleting tag ${release.tag_name}: ${tagError.message}`);
+                    console.error(`删除标签 ${release.tag_name} 时出错: ${tagError.message}`);
                   }
                 }
               } catch (error) {
-                console.error(`Error deleting release ${release.id}: ${error.message}`);
+                console.error(`删除发布 ${release.id} 时出错: ${error.message}`);
               }
             }
           }
           
-          console.log(`Deleted ${deletedCount} releases`);
+          console.log(`删除了 ${deletedCount} 个发布`);
 
-    - name: Delete unassociated tags
+    - name: 删除未关联的标签
       uses: actions/github-script@v6
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -125,20 +185,21 @@ jobs:
             owner: context.repo.owner,
             repo: context.repo.repo,
           });
-          console.log(`Found ${tags.length} tags`);
+          console.log(`找到 ${tags.length} 个标签`);
           
           const { data: releases } = await github.rest.repos.listReleases({
             owner: context.repo.owner,
             repo: context.repo.repo,
           });
-          console.log(`Found ${releases.length} releases`);
+          console.log(`找到 ${releases.length} 个发布`);
           
+          // 创建一个包含所有发布标签的集合
           const releaseTags = new Set(releases.map(release => release.tag_name));
-          console.log(`Release tags: ${Array.from(releaseTags).join(', ')}`);
+          console.log(`发布标签: ${Array.from(releaseTags).join(', ')}`);
           
           let deletedCount = 0;
           for (const tag of tags) {
-            console.log(`Checking tag: ${tag.name}`);
+            console.log(`检查标签: ${tag.name}`);
             if (!releaseTags.has(tag.name)) {
               try {
                 await github.rest.git.deleteRef({
@@ -146,13 +207,13 @@ jobs:
                   repo: context.repo.repo,
                   ref: `tags/${tag.name}`,
                 });
-                console.log(`Deleted unassociated tag: ${tag.name}`);
+                console.log(`删除了未关联的标签: ${tag.name}`);
                 deletedCount++;
               } catch (error) {
-                console.error(`Error deleting tag ${tag.name}: ${error.message}`);
+                console.error(`删除标签 ${tag.name} 时出错: ${error.message}`);
               }
             } else {
-              console.log(`Tag ${tag.name} is associated with a release, keeping it`);
+              console.log(`标签 ${tag.name} 与发布关联，保留`);
             }
           }
-          console.log(`Deleted ${deletedCount} unassociated tags`);
+          console.log(`删除了 ${deletedCount} 个未关联的标签`);
