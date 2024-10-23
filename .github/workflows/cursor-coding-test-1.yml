@@ -34,9 +34,6 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: 安装 OpenWrt SDK
-      uses: sbwml/openwrt-gh-action-sdk@go1.23
-
     - name: 初始化环境
       env:
         DEBIAN_FRONTEND: noninteractive
