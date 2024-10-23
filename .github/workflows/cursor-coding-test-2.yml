@@ -10,59 +10,54 @@ on:
         type: choice
         options:
         - '.config'
-        - 'custom.config'
+        - 'test.config'
 
 env:
   REPO_URL: https://github.com/openwrt/openwrt
-  REPO_BRANCH: v23.05.4
+  REPO_BRANCH: v23.05.5
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: ${{ github.event.inputs.config }}
   DIY_P1_SH: diy-part1.sh
   DIY_P2_SH: diy-part2.sh
-  TZ: Asia/Shanghai
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
+  TZ: Asia/Shanghai
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     
     steps:
     - name: 检出代码
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: 安装 OpenWrt SDK
+      uses: sbwml/openwrt-gh-action-sdk@go1.23
 
     - name: 初始化环境
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
-        sudo docker image prune --all --force
-        sudo -E apt-get -qq update
-        sudo -E apt-get -qq install ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
+        sudo timedatectl set-timezone "$TZ"
+        sudo apt update
+        sudo apt install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
         bzip2 ccache cmake cpio curl device-tree-compiler fastjar flex gawk gettext gcc-multilib g++-multilib \
         git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev \
-        libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libreadline-dev libssl-dev libtool lrzsz \
-        mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python3 python3-pip qemu-utils rsync \
-        scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev libfuse-dev
-        sudo -E apt-get -qq autoremove --purge
-        sudo -E apt-get -qq clean
-        sudo timedatectl set-timezone "$TZ"
+        libmpc-dev libmpfr-dev libncurses5-dev libncursesw5-dev libfuse-dev libreadline-dev libssl-dev libtool lrzsz \
+        mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python3 python3-pip python3-ply \
+        python3-pyelftools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx unzip \
+        vim wget xmlto xxd zlib1g-dev
+        sudo mkdir -p /workdir
+        sudo chown $USER:$GROUPS /workdir
 
-    - name: 获取当前日期
-      id: date
+    - name: 克隆源代码
       run: |
-        echo "date=$(date +'%Y.%m.%d-%H%M')" >> $GITHUB_ENV
-        echo "date2=$(date +'%m/%d %Y')" >> $GITHUB_ENV
-        echo "date3=$(date +'%m.%d')" >> $GITHUB_ENV
+        git clone $REPO_URL -b $REPO_BRANCH openwrt
 
-
-    - name: 克隆源码
-      run: |
-        git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf /workspaces/openwrt $GITHUB_WORKSPACE/openwrt
-        
-    - name: 加载自定义资源
+    - name: 加载自定义 feeds
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
         chmod +x $DIY_P1_SH
@@ -70,10 +65,10 @@ jobs:
         $GITHUB_WORKSPACE/$DIY_P1_SH
 
     - name: 更新 feeds
-      run: cd openwrt && ./scripts/feeds update -a
-
-    - name: 安装 feeds
-      run: cd openwrt && ./scripts/feeds install -a
+      working-directory: openwrt
+      run: |
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
 
     - name: 加载自定义配置
       run: |
@@ -83,74 +78,91 @@ jobs:
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
     - name: 下载包
-      id: package
+      working-directory: openwrt
       run: |
-        cd openwrt
         make defconfig
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
-    - name: 检查并安装 Go
-      run: |
-        if ! command -v go &> /dev/null || [[ $(go version) != *"go1.23"* ]]; then
-          echo "安装 Go 1.23.2..."
-          wget https://go.dev/dl/go1.23.2.linux-amd64.tar.gz
-          sudo rm -rf /usr/local/go
-          sudo tar -C /usr/local -xzf go1.23.2.linux-amd64.tar.gz
-          echo "GOROOT=/usr/local/go" >> $GITHUB_ENV
-          echo "PATH=/usr/local/go/bin:$PATH" >> $GITHUB_ENV
-        else
-          echo "Go 1.23 已安装，版本为："
-          go version
-        fi
-
-    - name: 设置 Go 环境变量
-      run: |
-        echo "GOTOOLCHAIN=go1.23.0" >> $GITHUB_ENV
-        echo "GO111MODULE=on" >> $GITHUB_ENV
-
-    - name: 验证 Go 环境
-      run: |
-        go version
-        go env
-
-    - name: 处理 Go 依赖
-      run: |
-        cd openwrt
-        find . -name go.mod -execdir go mod tidy \;
-        find . -name go.mod -execdir go get \;
-
     - name: 编译 OpenWrt
+      id: compile
       run: |
         cd openwrt
-        make defconfig
-        make download -j8
-        make V=s -j$(nproc)
+        echo -e "$(nproc) thread compile"
+        if grep -q 'CONFIG_PACKAGE_golang=y' .config || grep -q 'CONFIG_PACKAGE_golang-src=y' .config; then
+          echo "检测到 Go 包，使用 Go SDK 编译"
+          # 这里应该使用正确的方式来设置 Go 环境
+          # 例如，可以使用 actions/setup-go 来设置 Go 环境
+          # 或者手动安装所需的 Go 版本
+          # 以下是一个示例：
+          wget https://golang.org/dl/go1.23.linux-amd64.tar.gz
+          sudo tar -C /usr/local -xzf go1.23.linux-amd64.tar.gz
+          export PATH=$PATH:/usr/local/go/bin
+          go version
+        else
+          echo "未检测到 Go 包，使用标准编译"
+        fi
+        make -j$(nproc) || make -j1 || make -j1 V=s
+        echo "status=success" >> $GITHUB_OUTPUT
+        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
+        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=$(cat DEVICE_NAME)" >> $GITHUB_OUTPUT
+        echo "FILE_DATE=$(date +"%Y%m%d%H%M")" >> $GITHUB_OUTPUT
+
+    - name: 检查编译状态
+      if: steps.compile.outputs.status != 'success'
+      run: |
+        echo "编译失败，请检查日志"
+        exit 1
 
     - name: 检查空间使用情况
-      if: always()
+      if: (!cancelled())
       run: df -hT
 
     - name: 整理文件
       id: organize
-      if: success()
+      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
         cd openwrt/bin/targets/*/*
         rm -rf packages
-        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "FIRMWARE=$PWD" >> $GITHUB_OUTPUT
         echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 生成固件名称
+      id: generate_name
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      run: |
+        cd openwrt/bin/targets/*/*
+        device_info=$(cat openwrt/.config | grep "CONFIG_TARGET_BOARD" | cut -d '"' -f 2)
+        device_info+="_"
+        device_info+=$(cat openwrt/.config | grep "CONFIG_TARGET_SUBTARGET" | cut -d '"' -f 2)
+        time=$(date +'%Y%m%d_%H%M')
+        firmware_prefix="${device_info}_${time}"
+        for file in *; do
+          new_name="${firmware_prefix}_${file}"
+          mv "$file" "$new_name"
+        done
+        echo "FIRMWARE_PREFIX=$firmware_prefix" >> $GITHUB_OUTPUT
+
+    - name: 上传固件目录
+      uses: actions/upload-artifact@v3
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        name: OpenWrt_firmware_${{ steps.generate_name.outputs.FIRMWARE_PREFIX }}
+        path: ${{ steps.organize.outputs.FIRMWARE }}
 
     - name: 生成发布标签
       id: tag
-      if: success()
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       run: |
-        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
+        echo "release_tag=${{ steps.generate_name.outputs.FIRMWARE_PREFIX }}" >> $GITHUB_OUTPUT
         touch release.txt
-        echo "发布于 $(date +"%Y.%m.%d-%H:%M")" >> release.txt
-        echo "::set-output name=status::success"
+        echo "发布标签: ${{ steps.generate_name.outputs.FIRMWARE_PREFIX }}" >> release.txt
+        echo "固件包含设备: ${{ steps.compile.outputs.DEVICE_NAME }}" >> release.txt
+        echo "编译时间: ${{ steps.compile.outputs.FILE_DATE }}" >> release.txt
+        echo "status=success" >> $GITHUB_OUTPUT
 
-    - name: 上传固件到 Release
+    - name: 上传固件到发布
       uses: softprops/action-gh-release@v1
       if: steps.tag.outputs.status == 'success' && !cancelled()
       env:
@@ -158,7 +170,7 @@ jobs:
       with:
         tag_name: ${{ steps.tag.outputs.release_tag }}
         body_path: release.txt
-        files: ${{ env.FIRMWARE }}/*
+        files: ${{ steps.organize.outputs.FIRMWARE }}/*
 
     - name: 清理工作空间
       if: always()
@@ -167,26 +179,16 @@ jobs:
 
     - name: 清理旧的工作流
       uses: Mattraks/delete-workflow-runs@v2
+      if: always()
       with:
-        retain_days: 0
+        retain_days: 1
         keep_minimum_runs: 3
 
     - name: 清理旧的 Releases
       uses: dev-drprasad/delete-older-releases@v0.3.2
-      if: success()
+      if: always()
       with:
         keep_latest: 3
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: 检查关键文件
-      run: |
-        cd openwrt
-        echo "检查 .config 文件："
-        cat .config
-        echo "检查 feeds.conf.default 文件："
-        cat feeds.conf.default
-        # 检查其他可能影响编译的关键文件
-
-    
