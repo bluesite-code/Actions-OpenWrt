@@ -1,0 +1,57 @@
+name: Repository Cleanup
+
+on:
+  workflow_dispatch:  # 只允许手动触发
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 删除旧的 Workflows
+      uses: Mattraks/delete-workflow-runs@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        repository: ${{ github.repository }}
+        retain_days: 0
+        keep_minimum_runs: 3
+        delete_workflow_pattern: .*  # 删除所有工作流的旧运行记录
+
+    - name: 删除旧的 Releases
+      uses: dev-drprasad/delete-older-releases@v0.2.1
+      with:
+        keep_latest: 3
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 删除未关联的 tags
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const { data: tags } = await github.rest.repos.listTags({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+          const { data: releases } = await github.rest.repos.listReleases({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+          const releaseTags = new Set(releases.map(release => release.tag_name));
+          for (const tag of tags) {
+            if (!releaseTags.has(tag.name)) {
+              try {
+                await github.rest.git.deleteRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `tags/${tag.name}`,
+                });
+                console.log(`Deleted unassociated tag: ${tag.name}`);
+              } catch (error) {
+                console.error(`Error deleting tag ${tag.name}: ${error}`);
+              }
+            }
+          }
