@@ -1,33 +1,122 @@
 name: Repository Cleanup
 
 on:
-  workflow_dispatch:  # 只允许手动触发
+  workflow_dispatch:
 
 jobs:
   cleanup:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+
     steps:
-    - name: 检出代码
+    - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: 删除旧的 Workflows
-      uses: Mattraks/delete-workflow-runs@v2
+    - name: List and delete old workflow runs
+      uses: actions/github-script@v6
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        repository: ${{ github.repository }}
-        retain_days: 0
-        keep_minimum_runs: 3
-        delete_workflow_pattern: .*  # 删除所有工作流的旧运行记录
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const { data: workflows } = await github.rest.actions.listRepoWorkflows({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+          console.log(`Found ${workflows.total_count} workflows`);
+          
+          let totalDeleted = 0;
+          for (const workflow of workflows.workflows) {
+            console.log(`Processing workflow: ${workflow.name} (ID: ${workflow.id})`);
+            let page = 1;
+            let deletedForWorkflow = 0;
+            
+            while (true) {
+              const { data: runs } = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: workflow.id,
+                per_page: 100,
+                page: page
+              });
+              
+              if (runs.workflow_runs.length === 0) break;
+              
+              console.log(`  Found ${runs.workflow_runs.length} runs on page ${page}`);
+              
+              const runsToDelete = runs.workflow_runs.slice(3);  // Keep the latest 3 runs
+              for (const run of runsToDelete) {
+                try {
+                  await github.rest.actions.deleteWorkflowRun({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    run_id: run.id,
+                  });
+                  console.log(`  Deleted run ${run.id} of workflow ${workflow.name}`);
+                  deletedForWorkflow++;
+                  totalDeleted++;
+                } catch (error) {
+                  console.error(`  Error deleting run ${run.id}: ${error.message}`);
+                }
+              }
+              
+              page++;
+              if (runs.workflow_runs.length < 100) break;  // No more pages
+            }
+            
+            console.log(`  Deleted ${deletedForWorkflow} runs for workflow ${workflow.name}`);
+          }
+          
+          console.log(`Total deleted workflow runs: ${totalDeleted}`);
 
-    - name: 删除旧的 Releases
-      uses: dev-drprasad/delete-older-releases@v0.2.1
+    - name: Delete unassociated releases
+      uses: actions/github-script@v6
       with:
-        keep_latest: 3
-        delete_tags: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const { data: releases } = await github.rest.repos.listReleases({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+          console.log(`Found ${releases.length} releases`);
+          
+          const releasesToKeep = 3; // 保留最新的3个发布
+          let deletedCount = 0;
+          
+          if (releases.length > releasesToKeep) {
+            const releasesToDelete = releases.slice(releasesToKeep);
+            for (const release of releasesToDelete) {
+              try {
+                await github.rest.repos.deleteRelease({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  release_id: release.id,
+                });
+                console.log(`Deleted release: ${release.name || release.tag_name}`);
+                deletedCount++;
+                
+                // 如果发布有关联的标签，也删除标签
+                if (release.tag_name) {
+                  try {
+                    await github.rest.git.deleteRef({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      ref: `tags/${release.tag_name}`,
+                    });
+                    console.log(`Deleted associated tag: ${release.tag_name}`);
+                  } catch (tagError) {
+                    console.error(`Error deleting tag ${release.tag_name}: ${tagError.message}`);
+                  }
+                }
+              } catch (error) {
+                console.error(`Error deleting release ${release.id}: ${error.message}`);
+              }
+            }
+          }
+          
+          console.log(`Deleted ${deletedCount} releases`);
 
-    - name: 删除未关联的 tags
+    - name: Delete unassociated tags
       uses: actions/github-script@v6
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -36,12 +125,20 @@ jobs:
             owner: context.repo.owner,
             repo: context.repo.repo,
           });
+          console.log(`Found ${tags.length} tags`);
+          
           const { data: releases } = await github.rest.repos.listReleases({
             owner: context.repo.owner,
             repo: context.repo.repo,
           });
+          console.log(`Found ${releases.length} releases`);
+          
           const releaseTags = new Set(releases.map(release => release.tag_name));
+          console.log(`Release tags: ${Array.from(releaseTags).join(', ')}`);
+          
+          let deletedCount = 0;
           for (const tag of tags) {
+            console.log(`Checking tag: ${tag.name}`);
             if (!releaseTags.has(tag.name)) {
               try {
                 await github.rest.git.deleteRef({
@@ -50,8 +147,12 @@ jobs:
                   ref: `tags/${tag.name}`,
                 });
                 console.log(`Deleted unassociated tag: ${tag.name}`);
+                deletedCount++;
               } catch (error) {
-                console.error(`Error deleting tag ${tag.name}: ${error}`);
+                console.error(`Error deleting tag ${tag.name}: ${error.message}`);
               }
+            } else {
+              console.log(`Tag ${tag.name} is associated with a release, keeping it`);
             }
           }
+          console.log(`Deleted ${deletedCount} unassociated tags`);
