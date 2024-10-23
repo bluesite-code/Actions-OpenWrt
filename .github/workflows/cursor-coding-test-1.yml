@@ -64,7 +64,6 @@ jobs:
     - name: 更新 feeds
       working-directory: openwrt
       run: |
-        git pull
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
