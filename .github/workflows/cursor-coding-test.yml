@@ -30,7 +30,7 @@ jobs:
     
     steps:
     - name: 检出代码
-      uses: actions/checkout@main
+      uses: actions/checkout@v4
 
     - name: 安装 OpenWrt SDK
       uses: openwrt-gh-action-sdk@go1.23
