@@ -31,9 +31,13 @@ jobs:
           go mod init
           go mod download
 
-      - name: Go env
-        run:
-	  go env
+      - name: Check Go version and setup environment if needed
+        run: |
+        # 检查当前Go版本
+          current_go_version=$(go version | awk '{print $3}' | sed 's/go//')
+        
+        # 检查当前gotoolchain设置
+          current_gotoolchain=$(go env GOTOOLCHAIN)
         
       - name: Build Project
         run: go build -v ./...
