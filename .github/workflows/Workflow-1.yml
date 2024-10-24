@@ -1,19 +1,9 @@
 # .github/workflows/your-workflow-name.yml
 name: Workflow-1
 
-name: Go Workflow
-
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  repository_dispatch:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -33,11 +23,8 @@ jobs:
 
       - name: Check Go version and setup environment if needed
         run: |
-        # 检查当前Go版本
-          current_go_version=$(go version | awk '{print $3}' | sed 's/go//')
-        
-        # 检查当前gotoolchain设置
-          current_gotoolchain=$(go env GOTOOLCHAIN)
+          go version
+          go env
         
       - name: Build Project
         run: go build -v ./...
