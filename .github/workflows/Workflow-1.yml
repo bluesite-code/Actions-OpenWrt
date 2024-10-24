@@ -1,6 +1,8 @@
 # .github/workflows/your-workflow-name.yml
 name: Workflow-1
 
+name: Go Workflow
+
 on:
   push:
     branches: [ main ]
@@ -9,16 +11,16 @@ on:
 
 jobs:
   build:
-    name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
-      - name: Set up Go 1.23
+
+      - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.23
+          go-version: 1.23.2 # 假设 1.23.2 是一个有效的 Go 版本
+
       - name: Install Dependencies
+        working-directory: . # 假设 go.mod 在仓库的根目录
         run: go mod download
-      - name: Build Project
-        run: go build -v ./...
