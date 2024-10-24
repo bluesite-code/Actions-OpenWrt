@@ -19,8 +19,7 @@ jobs:
           
       - name: Install Dependencies
         working-directory: .
-        run: |
-          go mod download
+        run: go mod download
 
       - name: Check Go version and setup environment if needed
         run: |
