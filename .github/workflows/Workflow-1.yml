@@ -18,8 +18,8 @@ jobs:
           go-version: 1.23.2
           
       - name: Install Dependencies
-        working-directory: .
         run: go mod download
+        working-directory: ./
 
       - name: Check Go version and setup environment if needed
         run: |
