@@ -30,6 +30,9 @@ jobs:
         run: |
           go mod init
           go mod download
+
+      - name: Go env
+        run:
 	  go env
         
       - name: Build Project
