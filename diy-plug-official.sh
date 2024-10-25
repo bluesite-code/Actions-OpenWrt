@@ -42,4 +42,4 @@ git clone https://github.com/kenzok78/luci-app-fileassistant package/luci-app-fi
 git clone https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon
 
 # Make sure all operations are performed in the correct directory
-cd "$GITHUB_WORKSPACE/openwrt" || exit
+#cd "$GITHUB_WORKSPACE/openwrt" || exit
