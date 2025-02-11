@@ -22,7 +22,7 @@
 #sed -i '1i src-git haibo https://github.com/haiibo/openwrt-packages' feeds.conf.default
 
 # Add fros
-git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
+#git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
 
 # Add alist&mosdns
 rm -rf feeds/packages/lang/golang
