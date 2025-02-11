@@ -34,9 +34,8 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@main
-      with:
-          fetch-depth: 0
+      uses: actions/checkout@v4
+
 
     - name: Initialization environment
       env:
