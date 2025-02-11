@@ -49,7 +49,7 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
-	
+
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
