@@ -102,6 +102,13 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
+# 在编译步骤前添加Go版本验证
+    - name: Verify Go version
+      run: |
+        echo "Current Go version:"
+        go version
+        echo "Expected Go version: ${{ env.GO_VERSION }}"
+
     - name: Compile the firmware
       id: compile
       run: |
