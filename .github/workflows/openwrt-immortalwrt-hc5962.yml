@@ -19,7 +19,7 @@ on:
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
   REPO_BRANCH: openwrt-23.05
-  GO_VERSION: "1.23.6"
+  GO_VERSION: "1.23.2"
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   DIY_P1_SH: diy-plug-immortalwrt.sh
@@ -58,8 +58,12 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: ${{ env.GO_VERSION }}
-      env:
-        GOBIN: /usr/local/go/bin
+
+    - name: Verify Go version
+      run: |
+        go version
+        echo "GOROOT=$(go env GOROOT)"
+        echo "PATH=$PATH"
         
     - name: Clone source code
       working-directory: /workdir
@@ -100,6 +104,8 @@ jobs:
 
     - name: Compile the firmware
       id: compile
+      env:
+        GOTOOLCHAIN: auto
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
