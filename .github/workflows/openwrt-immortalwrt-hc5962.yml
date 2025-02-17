@@ -138,7 +138,13 @@ jobs:
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
-        cd openwrt/bin/targets/*/*
+        # 动态查找目标目录
+        TARGET_DIR=$(find openwrt/bin/targets -mindepth 2 -maxdepth 2 -type d | head -1)
+        if [ -z "$TARGET_DIR" ]; then
+          echo "::error::Cannot find target directory!"
+          exit 1
+        fi
+        cd $TARGET_DIR
         rm -rf packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
