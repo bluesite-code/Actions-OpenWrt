@@ -25,7 +25,7 @@
 git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
 
 # Edit Makefile
-find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/lang\/golang\/golang-package.mk/$(TOPDIR)\/feeds\/packages\/lang\/golang\/golang-package.mk/g' {}
+#find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/lang\/golang\/golang-package.mk/$(TOPDIR)\/feeds\/packages\/lang\/golang\/golang-package.mk/g' {}
 
 # Add alist&mosdns
 rm -rf feeds/packages/lang/golang
