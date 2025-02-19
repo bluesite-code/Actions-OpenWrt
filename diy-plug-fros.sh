@@ -16,13 +16,13 @@ git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
 echo "更新 Golang 源"
 rm -rf feeds/packages/lang/golang
 git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
+find package/ -name Makefile | xargs sed -i 's|../../lang/golang/golang-package.mk|$(TOPDIR)/feeds/packages/lang/golang/golang-package.mk|g'
 
 # 添加其他组件
 echo "添加 MosDNS 和 Alist"
 git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
 git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
 git clone https://github.com/sbwml/luci-app-alist package/alist
-find package/ -name Makefile | xargs sed -i 's|../../lang/golang/golang-package.mk|$(TOPDIR)/feeds/packages/lang/golang/golang-package.mk|g'
 
 # 添加 Advanced 插件
 echo "添加 Advanced 插件"
