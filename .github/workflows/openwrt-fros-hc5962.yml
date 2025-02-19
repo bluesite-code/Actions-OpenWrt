@@ -24,7 +24,12 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: recursive
-        path: main-repo  # 明确指定检出路径
+
+    - name: Verify Files Exist
+      run: |
+        echo "检查配置文件是否存在:"
+        ls -l "$GITHUB_WORKSPACE/$CONFIG_FILE"
+        [ -f "$GITHUB_WORKSPACE/$CONFIG_FILE" ] || { echo "Error: .config 文件缺失"; exit 1; }
 
     - name: Setup environment
       run: |
@@ -38,13 +43,16 @@ jobs:
       run: |
         git clone -b $REPO_BRANCH --depth 1 "$REPO_URL" openwrt
         echo "克隆后目录结构:"
-        ls -al openwrt/package  # 验证基础目录存在
+        ls -al openwrt
 
     - name: Prepare config files
       run: |
+        echo "当前工作目录: $(pwd)"
+        ls -al
         mkdir -p openwrt/package
         cp -v "$GITHUB_WORKSPACE/$CONFIG_FILE" openwrt/.config
-        chmod +x "$GITHUB_WORKSPACE/"*.sh
+        chmod +x "$GITHUB_WORKSPACE/$DIY_P1_SH"
+        chmod +x "$GITHUB_WORKSPACE/$DIY_P2_SH"
 
     - name: Run DIY scripts
       run: |
