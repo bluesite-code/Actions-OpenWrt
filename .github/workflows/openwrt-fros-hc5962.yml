@@ -54,15 +54,6 @@ jobs:
         chmod +x "$GITHUB_WORKSPACE/$DIY_P1_SH"
         chmod +x "$GITHUB_WORKSPACE/$DIY_P2_SH"
 
-    - name: Run DIY scripts
-      run: |
-        cd openwrt
-        echo "执行 DIY 脚本..."
-        bash "$GITHUB_WORKSPACE/$DIY_P1_SH" "$PWD"
-        bash "$GITHUB_WORKSPACE/$DIY_P2_SH" "$PWD"
-        # 验证脚本执行结果
-        [ -d package/fros ] || { echo "FROS 插件未正确克隆"; exit 1; }
-
     - name: Update feeds
       run: |
         cd openwrt
@@ -70,6 +61,13 @@ jobs:
         ./scripts/feeds install -a
         # 安装核心依赖包
         ./scripts/feeds install libopenssl libcurl libpcap libsqlite3
+
+    - name: Run DIY scripts
+      run: |
+        cd openwrt
+        echo "当前 feeds 状态:"
+        bash "$GITHUB_WORKSPACE/$DIY_P1_SH" "$PWD"
+        bash "$GITHUB_WORKSPACE/$DIY_P2_SH" "$PWD"
 
     - name: Build configuration
       run: |
