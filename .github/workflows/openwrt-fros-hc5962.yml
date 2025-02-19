@@ -2,10 +2,10 @@ name: Openwrt-fros-HC5962
 
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
-  REPO_BRANCH: v24.10.0
+  REPO_BRANCH: openwrt-24.10
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
-  DIY_P1_SH: diy-plug-fros.sh
+  DIY_P1_SH: diy-plug-official.sh
   DIY_P2_SH: diy-config.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
@@ -51,24 +51,28 @@ jobs:
           jq \
           time
 
-    - name: Clone ImmortalWrt
+    - name: Clone ImmortalWrt (Debug)
       run: |
-        git clone -b $REPO_BRANCH --depth 1 $REPO_PATH openwrt
-        cd openwrt
+        echo "Cloning from $REPO_URL branch $REPO_BRANCH"
+        git clone -b $REPO_BRANCH --depth 1 "$REPO_URL" openwrt || { echo "Clone failed"; exit 1; }
+        echo "Cloned directory contents:"
+        ls -al openwrt
 
     - name: Prepare config files
       run: |
-        cp $GITHUB_WORKSPACE/$FEEDS_CONF openwrt/
-        cp $GITHUB_WORKSPACE/$CONFIG_FILE openwrt/
-        chmod +x $GITHUB_WORKSPACE/$DIY_P1_SH
-        chmod +x $GITHUB_WORKSPACE/$DIY_P2_SH
+        echo "Copying config files..."
+        cp "$GITHUB_WORKSPACE/$FEEDS_CONF" openwrt/feeds.conf.default
+        cp "$GITHUB_WORKSPACE/$CONFIG_FILE" openwrt/.config
+        chmod +x "$GITHUB_WORKSPACE/$DIY_P1_SH"
+        chmod +x "$GITHUB_WORKSPACE/$DIY_P2_SH"
 
     - name: Run DIY scripts
       run: |
         cd openwrt
+        echo "Running DIY scripts..."
         ../$DIY_P1_SH
         ../$DIY_P2_SH
-
+        
     - name: Update feeds
       run: |
         cd openwrt
