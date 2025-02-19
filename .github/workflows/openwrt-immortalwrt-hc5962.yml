@@ -18,7 +18,7 @@ on:
 
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
-  REPO_BRANCH: v23.05.4
+  REPO_BRANCH: openwrt-24.10
   GO_VERSION: "1.23.6"
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
