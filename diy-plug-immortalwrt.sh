@@ -44,4 +44,5 @@ git clone https://github.com/kenzok78/luci-app-fileassistant package/luci-app-fi
 # Add theme
 #echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
 cd openwrt/package
-git clone https://github.com/jerrykuku/luci-theme-argon.git
+rm -rf luci-theme-argon
+git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git luci-theme-argon
