@@ -86,4 +86,27 @@ jobs:
           openwrt/bin/targets/ramips/mt7621/*.sha256sum
         retention-days: 7
 
+    - name: Create version tag
+      id: tag_version
+      run: |
+        DATE=$(date +%Y%m%d)
+        echo "version=build-$DATE-${{ github.run_number }}" >> $GITHUB_OUTPUT
+      if: ${{ env.UPLOAD_RELEASE }}
+
+    - name: Create release
+      if: ${{ env.UPLOAD_RELEASE }}
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.tag_version.outputs.version }}
+        name: Build ${{ steps.tag_version.outputs.version }}
+        body: |
+          Auto-generated OpenWrt firmware
+          - 编译时间: ${{ steps.get-time.outputs.time }}
+          - 核心版本: $(make -C openwrt -s kernelversion)
+        files: |
+          openwrt/bin/targets/ramips/mt7621/*.bin
+          openwrt/bin/targets/ramips/mt7621/sha256sums
+        draft: false
+        prerelease: true
+      env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
