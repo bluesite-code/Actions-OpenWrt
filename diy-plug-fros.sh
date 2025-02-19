@@ -3,7 +3,10 @@ set -x  # 开启调试模式
 OPENWRT_ROOT="$1"  # 从工作流传入的路径参数
 
 # 进入 OpenWrt 源码目录
-cd "$OPENWRT_ROOT" || exit 1
+cd "$OPENWRT_ROOT"
+
+# 添加延迟确保 feeds 已初始化
+sleep 2
 
 # 添加 FROS
 echo "添加 FROS 插件"
@@ -19,6 +22,7 @@ echo "添加 MosDNS 和 Alist"
 git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
 git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
 git clone https://github.com/sbwml/luci-app-alist package/alist
+find package/ -name Makefile | xargs sed -i 's|../../lang/golang/golang-package.mk|$(TOPDIR)/feeds/packages/lang/golang/golang-package.mk|g'
 
 # 添加 Advanced 插件
 echo "添加 Advanced 插件"
