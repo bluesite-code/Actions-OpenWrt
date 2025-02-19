@@ -13,20 +13,37 @@
 # Uncomment a feed source
 #sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
 
-# Add a feed source, echo or sed
+# Add a feed source
 #echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
 #echo 'src-git packages https://github.com/kiddin9/openwrt-packages.git' >>feeds.conf.default
-sed -i '1i src-git kenzo https://github.com/kenzok8/openwrt-packages' feeds.conf.default
-sed -i '2i src-git small https://github.com/kenzok8/small' feeds.conf.default
+#sed -i '1i src-git kenzo https://github.com/kenzok8/small-package' feeds.conf.default
+#sed -i '2i src-git small https://github.com/kenzok8/small' feeds.conf.default
+#sed -i '1i src-git haibo https://github.com/haiibo/openwrt-packages' feeds.conf.default
+
+# Add fros
+git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
+
+# Edit Makefile
+#find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/lang\/golang\/golang-package.mk/$(TOPDIR)\/feeds\/packages\/lang\/golang\/golang-package.mk/g' {}
 
 # Add alist&mosdns
-echo 'src-git https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang' >> feeds.conf.default
-echo 'src-git https://github.com/sbwml/luci-app-alist package/alist' >> feeds.conf.default
-echo 'src-git https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns' >> feeds.conf.default
-echo 'src-git https://github.com/sbwml/v2ray-geodata package/v2ray-geodata' >> feeds.conf.default
+sudo rm -rf feeds/packages/lang/golang
+sudo rm -rf feeds/packages/net/v2ray-geodata
+#git clone https://github.com/wixxm/WikjxWrt-golang feeds/packages/lang/golang
+git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
+git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
+git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
+git clone https://github.com/sbwml/luci-app-alist package/alist
+
+# Add other
+#git clone https://github.com/sirpdboy/luci-app-advanced package/luci-app-advanced
+git clone https://github.com/sirpdboy/luci-app-advancedplus package/luci-app-advanced
+git clone https://github.com/sirpdboy/luci-app-autotimeset package/luci-app-autotimeset
+#git clone https://github.com/wangqn/luci-app-filebrowser package/luci-app-filebrowser
+git clone https://github.com/kenzok78/luci-app-fileassistant package/luci-app-fileassistant
 
 # Add theme
 #echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
-#cd openwrt/package
-#echo 'src-git https://github.com/jerrykuku/luci-theme-argon.git' >>feeds.conf.default
+cd openwrt/package
+git clone https://github.com/jerrykuku/luci-theme-argon.git
