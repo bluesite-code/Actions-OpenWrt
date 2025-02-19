@@ -1,50 +1,33 @@
 #!/bin/bash
-#
-# https://github.com/P3TERX/Actions-OpenWrt
-# File name: DIY_P1_SH
-# Description: OpenWrt DIY script part 1 (Before Update feeds)
-#
-# Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
-#
-# This is free software, licensed under the MIT License.
-# See /LICENSE for more information.
-#
+set -x  # 开启调试模式
+OPENWRT_ROOT="$1"  # 从工作流传入的路径参数
 
-# Uncomment a feed source
-#sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
+# 进入 OpenWrt 源码目录
+cd "$OPENWRT_ROOT" || exit 1
 
-# Add a feed source
-#echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
-#echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
-#echo 'src-git packages https://github.com/kiddin9/openwrt-packages.git' >>feeds.conf.default
-#sed -i '1i src-git kenzo https://github.com/kenzok8/small-package' feeds.conf.default
-#sed -i '2i src-git small https://github.com/kenzok8/small' feeds.conf.default
-#sed -i '1i src-git haibo https://github.com/haiibo/openwrt-packages' feeds.conf.default
-
-# Add fros
+# 添加 FROS
+echo "添加 FROS 插件"
 git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
 
-# Edit Makefile
-#find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/lang\/golang\/golang-package.mk/$(TOPDIR)\/feeds\/packages\/lang\/golang\/golang-package.mk/g' {}
-
-# Add alist&mosdns
-sudo rm -rf feeds/packages/lang/golang
-sudo rm -rf feeds/packages/net/v2ray-geodata
-#git clone https://github.com/wixxm/WikjxWrt-golang feeds/packages/lang/golang
+# 处理 Golang 依赖
+echo "更新 Golang 源"
+rm -rf feeds/packages/lang/golang
 git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
+
+# 添加其他组件
+echo "添加 MosDNS 和 Alist"
 git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
 git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
 git clone https://github.com/sbwml/luci-app-alist package/alist
 
-# Add other
-#git clone https://github.com/sirpdboy/luci-app-advanced package/luci-app-advanced
-git clone https://github.com/sirpdboy/luci-app-advancedplus package/luci-app-advanced
+# 添加 Advanced 插件
+echo "添加 Advanced 插件"
+git clone https://github.com/sirpdboy/luci-app-advancedplus package/luci-app-advancedplus
 git clone https://github.com/sirpdboy/luci-app-autotimeset package/luci-app-autotimeset
-#git clone https://github.com/wangqn/luci-app-filebrowser package/luci-app-filebrowser
-#git clone https://github.com/kenzok78/luci-app-fileassistant package/luci-app-fileassistant
 
-# Add theme
-#echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
-cd openwrt/package
+# 添加 Argon 主题
+echo "添加 Argon 主题"
+cd package || exit 1
 rm -rf luci-theme-argon
 git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git luci-theme-argon
+cd .. || exit 1
