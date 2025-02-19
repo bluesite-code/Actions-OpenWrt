@@ -51,7 +51,7 @@ jobs:
           jq \
           time
 
-    - name: Clone ImmortalWrt (Debug)
+    - name: Clone ImmortalWrt
       run: |
         echo "Cloning from $REPO_URL branch $REPO_BRANCH"
         git clone -b $REPO_BRANCH --depth 1 "$REPO_URL" openwrt || { echo "Clone failed"; exit 1; }
@@ -61,7 +61,6 @@ jobs:
     - name: Prepare config files
       run: |
         echo "Copying config files..."
-        cp "$GITHUB_WORKSPACE/$FEEDS_CONF" openwrt/feeds.conf.default
         cp "$GITHUB_WORKSPACE/$CONFIG_FILE" openwrt/.config
         chmod +x "$GITHUB_WORKSPACE/$DIY_P1_SH"
         chmod +x "$GITHUB_WORKSPACE/$DIY_P2_SH"
