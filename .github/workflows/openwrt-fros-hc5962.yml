@@ -86,13 +86,4 @@ jobs:
           openwrt/bin/targets/ramips/mt7621/*.sha256sum
         retention-days: 7
 
-    - name: Create release
-      if: ${{ env.UPLOAD_RELEASE }}
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          openwrt/bin/targets/*/*/*
-        draft: false
-        prerelease: false
-      env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
