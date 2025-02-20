@@ -1,4 +1,4 @@
-name: OpenWrt-FROS-HC5962-Build
+name: Openwrt-fros-HC5962
 
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
