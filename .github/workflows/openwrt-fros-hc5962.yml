@@ -1,13 +1,11 @@
-name: Openwrt-fros-HC5962
+name: OpenWrt-FROS-HC5962-Build
 
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
   REPO_BRANCH: openwrt-24.10
-  FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   DIY_P1_SH: diy-plug-fros.sh
   DIY_P2_SH: diy-config.sh
-  UPLOAD_BIN_DIR: false
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
   TZ: Asia/Shanghai
@@ -25,13 +23,12 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Verify Files Exist
+    - name: Verify Config Files
       run: |
-        echo "检查配置文件是否存在:"
-        ls -l "$GITHUB_WORKSPACE/$CONFIG_FILE"
-        [ -f "$GITHUB_WORKSPACE/$CONFIG_FILE" ] || { echo "Error: .config 文件缺失"; exit 1; }
+        [ -f "$GITHUB_WORKSPACE/$CONFIG_FILE" ] || { echo "错误：缺少 .config 文件"; exit 1; }
+        [ -f "$GITHUB_WORKSPACE/$DIY_P1_SH" ] || { echo "错误：缺少 DIY 脚本"; exit 1; }
 
-    - name: Setup environment
+    - name: Setup Build Environment
       run: |
         sudo apt-get update -y
         sudo apt-get install -y \
@@ -42,69 +39,72 @@ jobs:
     - name: Clone ImmortalWrt
       run: |
         git clone -b $REPO_BRANCH --depth 1 "$REPO_URL" openwrt
-        echo "克隆后目录结构:"
+        echo "源码目录结构:"
         ls -al openwrt
 
-    - name: Prepare config files
+    - name: Prepare Configuration
       run: |
-        echo "当前工作目录: $(pwd)"
-        ls -al
         mkdir -p openwrt/package
         cp -v "$GITHUB_WORKSPACE/$CONFIG_FILE" openwrt/.config
-        chmod +x "$GITHUB_WORKSPACE/$DIY_P1_SH"
-        chmod +x "$GITHUB_WORKSPACE/$DIY_P2_SH"
+        chmod +x "$GITHUB_WORKSPACE/"*.sh
 
-    - name: Update feeds
+    - name: Update Feeds
       run: |
         cd openwrt
         ./scripts/feeds update -a
         ./scripts/feeds install -a
-        # 安装核心依赖包
-        ./scripts/feeds install libopenssl libcurl libpcap libsqlite3
+        ./scripts/feeds install libopenssl libcurl libpcap
 
-    - name: Run DIY scripts
+    - name: Apply Custom Scripts
       run: |
         cd openwrt
-        echo "当前 feeds 状态:"
+        echo "应用自定义脚本..."
         bash "$GITHUB_WORKSPACE/$DIY_P1_SH" "$PWD"
         bash "$GITHUB_WORKSPACE/$DIY_P2_SH" "$PWD"
 
-    - name: Build configuration
+    - name: Build Firmware
       run: |
         cd openwrt
         make defconfig
         make -j$(nproc) download
-        make -j$(($(nproc)+1)) V=s
+        make -j$(($(nproc)+1)) V=s || (make -j1 V=s ; exit 1)
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+    - name: Verify Build Output
+      run: |
+        cd openwrt/bin/targets/ramips/mt7621
+        echo "生成文件列表:"
+        ls -l
+        [ -f immortalwrt-*-hiwifi_hc5962-squashfs-sysupgrade.bin ] || exit 1
+
+    - name: Upload Artifacts
       if: ${{ env.UPLOAD_FIRMWARE }}
+      uses: actions/upload-artifact@v4
       with:
         name: openwrt-firmware
         path: |
-          openwrt/bin/targets/ramips/mt7621/*.bin
-          openwrt/bin/targets/ramips/mt7621/*.sha256sum
+          openwrt/bin/targets/ramips/mt7621/immortalwrt-*-hiwifi_hc5962-squashfs-sysupgrade.bin
+          openwrt/bin/targets/ramips/mt7621/sha256sums
         retention-days: 7
 
-    - name: Create version tag
+    - name: Generate Version Tag
       id: tag_version
+      if: ${{ env.UPLOAD_RELEASE }}
       run: |
         DATE=$(date +%Y%m%d)
         echo "version=build-$DATE-${{ github.run_number }}" >> $GITHUB_OUTPUT
-      if: ${{ env.UPLOAD_RELEASE }}
 
-    - name: Create release
+    - name: Create GitHub Release
       if: ${{ env.UPLOAD_RELEASE }}
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ steps.tag_version.outputs.version }}
         name: Build ${{ steps.tag_version.outputs.version }}
         body: |
-          Auto-generated OpenWrt firmware
-          - 编译时间: ${{ steps.get-time.outputs.time }}
-          - 核心版本: $(make -C openwrt -s kernelversion)
+          HiWiFi HC5962 定制固件
+          - 编译时间: $(date +'%Y-%m-%d %H:%M:%S')
+          - 源码分支: ${{ env.REPO_BRANCH }}
         files: |
-          openwrt/bin/targets/ramips/mt7621/*.bin
+          openwrt/bin/targets/ramips/mt7621/immortalwrt-*-hiwifi_hc5962-squashfs-sysupgrade.bin
           openwrt/bin/targets/ramips/mt7621/sha256sums
         draft: false
         prerelease: true
