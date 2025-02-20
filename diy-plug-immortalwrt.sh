@@ -46,3 +46,8 @@ git clone https://github.com/kenzok78/luci-app-fileassistant package/luci-app-fi
 cd openwrt/package
 rm -rf luci-theme-argon
 git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git luci-theme-argon
+
+# 添加FUSE相关包
+git clone https://github.com/openwrt/packages -b openwrt-24.10 trd/packages
+cp -rf trd/packages/utils/fuse feeds/packages/utils/
+rm -rf trd
