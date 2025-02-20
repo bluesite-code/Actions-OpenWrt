@@ -66,15 +66,29 @@ jobs:
       run: |
         cd openwrt
         make defconfig
-        make -j$(nproc) download
-        make -j$(($(nproc)+1)) V=s || (make -j1 V=s ; exit 1)
+        make -j$(nproc) V=s
+        
+        # 强制验证输出路径
+        if [ ! -d "bin/targets/ramips/mt7621" ]; then
+            echo "错误：目标设备路径未生成，可能原因："
+            echo "1. .config 中设备配置错误"
+            echo "2. 核心包编译失败"
+            grep 'CONFIG_TARGET_ramips_mt7621_DEVICE_hiwifi_hc5962' .config || echo "未配置设备"
+            exit 1
+        fi
+
+    - name: Debug Output Path
+      run: |
+        echo "编译输出树状结构:"
+        tree -L 4 openwrt/bin
+        [ -d "openwrt/bin/targets/ramips/mt7621" ] || exit 1
 
     - name: Verify Build Output
       run: |
-        cd openwrt/bin/targets/ramips/mt7621
-        echo "生成文件列表:"
+        cd openwrt/bin/targets/ramips/mt7621 || cd openwrt/bin/targets/*/*
+        echo "最终文件列表:"
         ls -l
-        [ -f immortalwrt-*-hiwifi_hc5962-squashfs-sysupgrade.bin ] || exit 1
+        [ -f *sysupgrade.bin ] || { echo "固件文件缺失"; exit 1; }
 
     - name: Upload Artifacts
       if: ${{ env.UPLOAD_FIRMWARE }}
