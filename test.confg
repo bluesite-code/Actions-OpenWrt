@@ -2,6 +2,7 @@
 # 核心架构配置
 # ======================
 CONFIG_TARGET_ramips=y
+CONFIG_TARGET_ramips_mt7621=y
 CONFIG_TARGET_SUBTARGET="mt7621"
 CONFIG_TARGET_ARCH_PACKAGES="mipsel_24kc"
 CONFIG_TARGET_mipsel_24kc=y
