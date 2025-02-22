@@ -26,7 +26,7 @@ git clone https://github.com/sbwml/luci-app-alist package/alist
 
 # 添加 Advanced 插件
 echo "添加 Advanced 插件"
-git clone https://github.com/sirpdboy/luci-app-advancedplus package/luci-app-advancedplus
+git clone https://github.com/sirpdboy/luci-app-advancedplus package/luci-app-advanced
 git clone https://github.com/sirpdboy/luci-app-autotimeset package/luci-app-autotimeset
 
 # 添加 Argon 主题
