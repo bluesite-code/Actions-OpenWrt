@@ -48,6 +48,13 @@ jobs:
         cp -v "$GITHUB_WORKSPACE/$CONFIG_FILE" openwrt/.config
         chmod +x "$GITHUB_WORKSPACE/"*.sh
 
+    - name: Update Feeds
+      run: |
+        cd openwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        ./scripts/feeds install libopenssl libcurl libpcap
+
     - name: Apply Custom Scripts
       run: |
         cd openwrt
@@ -55,12 +62,11 @@ jobs:
         bash "$GITHUB_WORKSPACE/$DIY_P1_SH" "$PWD"
         bash "$GITHUB_WORKSPACE/$DIY_P2_SH" "$PWD"
 
-    - name: Update Feeds
+    - name: Re-Update Feeds After Custom Scripts
       run: |
         cd openwrt
         ./scripts/feeds update -a
         ./scripts/feeds install -a
-        ./scripts/feeds install libopenssl libcurl libpcap
 
     - name: Generate Final Config
       run: |
