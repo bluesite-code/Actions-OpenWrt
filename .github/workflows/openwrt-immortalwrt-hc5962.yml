@@ -94,8 +94,10 @@ jobs:
       run: |
         wget https://go.dev/dl/go1.23.6.linux-amd64.tar.gz
         sudo tar -C /usr/local -xzf go1.23.6.linux-amd64.tar.gz
-        echo "$GOROOT/bin" >> $GITHUB_PATH
+        echo "/usr/local/go/bin" >> $GITHUB_PATH
         echo "GOROOT=/usr/local/go" >> $GITHUB_ENV
+        echo "GOTOOLCHAIN=go1.23.6" >> $GITHUB_ENV
+        echo "$GITHUB_WORKSPACE/openwrt/staging_dir/toolchain-mipsel_24kc_gcc-12.3.0_musl/bin" >> $GITHUB_PATH
 
     - name: Compile the firmware
       id: compile
