@@ -72,7 +72,6 @@ jobs:
     - name: Reinstall feeds
       run: | 
         cd openwrt && ./scripts/feeds update -i && ./scripts/feeds install -a
-        ./scripts/feeds install libopenssl libcurl libpcap libsqlite3
    
     - name: Load custom configuration
       run: |
