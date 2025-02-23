@@ -81,13 +81,6 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
-    - name: Set up Go
-      run: |
-        wget https://go.dev/dl/go1.23.6.linux-amd64.tar.gz
-        sudo tar -C /usr/local -xzf go1.23.6.linux-amd64.tar.gz
-        echo "$GOROOT/bin" >> $GITHUB_PATH
-        echo "GOROOT=/usr/local/go" >> $GITHUB_ENV
-
     - name: Download package
       id: package
       run: |
@@ -96,6 +89,14 @@ jobs:
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
+
+    - name: Set up Go
+      run: |
+        sudo rm -rf feeds/packages/lang/golang
+        wget https://go.dev/dl/go1.23.6.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go1.23.6.linux-amd64.tar.gz
+        echo "$GOROOT/bin" >> $GITHUB_PATH
+        echo "GOROOT=/usr/local/go" >> $GITHUB_ENV
 
     - name: Compile the firmware
       id: compile
