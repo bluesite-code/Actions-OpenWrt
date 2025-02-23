@@ -72,6 +72,13 @@ jobs:
     - name: Reinstall feeds
       run: | 
         cd openwrt && ./scripts/feeds update -i && ./scripts/feeds install -a
+
+    - name: Set up Go
+      run: |
+        wget https://go.dev/dl/go1.23.6.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go1.23.6.linux-amd64.tar.gz
+        echo "$GOROOT/bin" >> $GITHUB_PATH
+        echo "GOROOT=/usr/local/go" >> $GITHUB_ENV
    
     - name: Load custom configuration
       run: |
