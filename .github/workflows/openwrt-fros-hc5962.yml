@@ -55,7 +55,6 @@ jobs:
         bash "$GITHUB_WORKSPACE/$DIY_P1_SH" "$PWD"
         bash "$GITHUB_WORKSPACE/$DIY_P2_SH" "$PWD"
 
-    # 合并并优化 Feeds 更新（仅保留一次）
     - name: Update and Install Feeds
       run: |
         cd openwrt
@@ -65,12 +64,14 @@ jobs:
     - name: Generate Final Config
       run: |
         cd openwrt
+        find package/ -maxdepth 3 -name Makefile -print0 | xargs -0 sed -i \
+        's|../../lang/golang/golang-package.mk|$(TOPDIR)/feeds/packages/lang/golang/golang-package.mk|g'        
         # 保留原始配置中的自定义选项
         cp "$GITHUB_WORKSPACE/$CONFIG_FILE" .config
         # 仅追加新发现的包（避免覆盖）
         make defconfig
-        ./scripts/diffconfig.sh > diffconfig && cat diffconfig
-
+        ./scripts/diffconfig.sh > diffconfig && cat diffconfig      
+        
     - name: Build Firmware
       run: |
         cd openwrt
