@@ -2,7 +2,7 @@ name: Openwrt-fros-HC5962
 
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
-  REPO_BRANCH: openwrt-24.10
+  REPO_BRANCH: openwrt-23.05
   CONFIG_FILE: .config
   DIY_P1_SH: diy-plug-fros.sh
   DIY_P2_SH: diy-config.sh
@@ -48,13 +48,6 @@ jobs:
         cp -v "$GITHUB_WORKSPACE/$CONFIG_FILE" openwrt/.config
         chmod +x "$GITHUB_WORKSPACE/"*.sh
 
-    - name: Update Feeds
-      run: |
-        cd openwrt
-        ./scripts/feeds update -a
-        ./scripts/feeds install -a
-        ./scripts/feeds install libopenssl libcurl libpcap
-
     - name: Apply Custom Scripts
       run: |
         cd openwrt
@@ -62,7 +55,8 @@ jobs:
         bash "$GITHUB_WORKSPACE/$DIY_P1_SH" "$PWD"
         bash "$GITHUB_WORKSPACE/$DIY_P2_SH" "$PWD"
 
-    - name: Re-Update Feeds After Custom Scripts
+    # 合并并优化 Feeds 更新（仅保留一次）
+    - name: Update and Install Feeds
       run: |
         cd openwrt
         ./scripts/feeds update -a
@@ -71,14 +65,15 @@ jobs:
     - name: Generate Final Config
       run: |
         cd openwrt
+        # 保留原始配置中的自定义选项
         cp "$GITHUB_WORKSPACE/$CONFIG_FILE" .config
+        # 仅追加新发现的包（避免覆盖）
         make defconfig
         ./scripts/diffconfig.sh > diffconfig && cat diffconfig
 
     - name: Build Firmware
       run: |
         cd openwrt
-        make defconfig
         make -j$(nproc) V=s
         
         # 强制验证输出路径
