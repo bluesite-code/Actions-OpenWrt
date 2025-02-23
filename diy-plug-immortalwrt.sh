@@ -22,7 +22,7 @@
 #sed -i '1i src-git haibo https://github.com/haiibo/openwrt-packages' feeds.conf.default
 
 # Add fros
-#git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
+git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
 
 # Edit Makefile
 #find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/lang\/golang\/golang-package.mk/$(TOPDIR)\/feeds\/packages\/lang\/golang\/golang-package.mk/g' {}
@@ -39,7 +39,7 @@ git clone https://github.com/sbwml/luci-app-alist package/alist
 # Add other
 git clone https://github.com/sirpdboy/luci-app-autotimeset package/luci-app-autotimeset
 git clone https://github.com/sirpdboy/luci-app-advanced package/luci-app-advanced
-git clone https://github.com/kenzok78/luci-app-fileassistant package/luci-app-fileassistant
+#git clone https://github.com/kenzok78/luci-app-fileassistant package/luci-app-fileassistant
 
 # Add theme
 #echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
@@ -48,6 +48,6 @@ rm -rf luci-theme-argon
 git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git luci-theme-argon
 
 # 添加FUSE相关包
-git clone https://github.com/openwrt/packages -b openwrt-24.10 trd/packages
-cp -rf trd/packages/utils/fuse feeds/packages/utils/
-rm -rf trd
+#git clone https://github.com/openwrt/packages -b openwrt-24.10 trd/packages
+#cp -rf trd/packages/utils/fuse feeds/packages/utils/
+#rm -rf trd
