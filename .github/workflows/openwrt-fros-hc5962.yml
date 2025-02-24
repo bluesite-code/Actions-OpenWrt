@@ -48,18 +48,18 @@ jobs:
         cp -v "$GITHUB_WORKSPACE/$CONFIG_FILE" openwrt/.config
         chmod +x "$GITHUB_WORKSPACE/"*.sh
 
+    - name: Update and Install Feeds
+      run: |
+        cd openwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+
     - name: Apply Custom Scripts
       run: |
         cd openwrt
         echo "应用自定义脚本..."
         bash "$GITHUB_WORKSPACE/$DIY_P1_SH" "$PWD"
         bash "$GITHUB_WORKSPACE/$DIY_P2_SH" "$PWD"
-
-    - name: Update and Install Feeds
-      run: |
-        cd openwrt
-        ./scripts/feeds update -a
-        ./scripts/feeds install -a
 
     - name: Generate Final Config
       run: |
