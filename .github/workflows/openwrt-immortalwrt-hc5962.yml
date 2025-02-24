@@ -94,7 +94,7 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
-    - name: Update Makefiles
+    - name: Fix the makefiles
       run: |
         find package/ -maxdepth 3 -name Makefile -print0 | xargs -0 sed -i \
           's|../../lang/golang/golang-package.mk|$(TOPDIR)/feeds/packages/lang/golang/golang-package.mk|g'
