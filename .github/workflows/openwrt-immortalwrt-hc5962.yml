@@ -31,12 +31,16 @@ env:
 jobs:
   build:
     runs-on: ubuntu-22.04
-
+    env:
+      GOTOOLCHAIN: go1.23.6  # Toolchain version locked
     steps:
-    - name: Checkout
+    - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
       with:
-          fetch-depth: 0
+        go-version: '1.23.6'
 
     - name: Initialization environment
       env:
@@ -90,21 +94,14 @@ jobs:
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
-    - name: Set up Go
+    - name: Update Makefiles
       run: |
-        wget https://go.dev/dl/go1.23.6.linux-amd64.tar.gz
-        sudo tar -C /usr/local -xzf go1.23.6.linux-amd64.tar.gz
-        echo "/usr/local/go/bin" >> $GITHUB_PATH
-        echo "GOROOT=/usr/local/go" >> $GITHUB_ENV
-        echo "GOTOOLCHAIN=go1.23.6" >> $GITHUB_ENV
-        echo "$GITHUB_WORKSPACE/openwrt/staging_dir/toolchain-mipsel_24kc_gcc-12.3.0_musl/bin" >> $GITHUB_PATH
-
+        find package/ -maxdepth 3 -name Makefile -print0 | xargs -0 sed -i \
+          's|../../lang/golang/golang-package.mk|$(TOPDIR)/feeds/packages/lang/golang/golang-package.mk|g'
+          
     - name: Compile the firmware
       id: compile
       run: |
-        cd openwrt
-        find package/ -maxdepth 3 -name Makefile -print0 | xargs -0 sed -i \
-        's|../../lang/golang/golang-package.mk|$(TOPDIR)/feeds/packages/lang/golang/golang-package.mk|g'
         echo -e "$(nproc) thread compile"
         make -j$(nproc) || make -j1 || make -j1 V=s
         echo "status=success" >> $GITHUB_OUTPUT
