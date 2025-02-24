@@ -96,6 +96,7 @@ jobs:
 
     - name: Fix the makefiles
       run: |
+        cd openwrt
         find package/ -maxdepth 3 -name Makefile -print0 | xargs -0 sed -i \
           's|../../lang/golang/golang-package.mk|$(TOPDIR)/feeds/packages/lang/golang/golang-package.mk|g'
           
