@@ -96,12 +96,6 @@ jobs:
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
-
-    - name: Fix the makefiles
-      run: |
-        cd openwrt
-        find package/ -maxdepth 3 -name Makefile -print0 | xargs -0 sed -i \
-          's|../../lang/golang/golang-package.mk|$(TOPDIR)/feeds/packages/lang/golang/golang-package.mk|g'
           
     - name: Compile the firmware
       id: compile
