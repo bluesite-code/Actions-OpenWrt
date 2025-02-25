@@ -1,0 +1,52 @@
+    #
+# https://github.com/P3TERX/Actions-OpenWrt
+#
+# File: .github/workflows/openwrt-bulder.yml
+# Description: Build OpenWrt using GitHub Actions
+#
+# Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
+#
+# This is free software, licensed under the MIT License.
+# See /LICENSE for more information.
+#
+
+name: Golang-Test
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+
+env:
+  REPO_URL: https://github.com/immortalwrt/immortalwrt
+  REPO_BRANCH: openwrt-23.05
+  FEEDS_CONF: feeds.conf.default
+  CONFIG_FILE: .config
+  DIY_P1_SH: diy-plug-immortalwrt.sh
+  DIY_P2_SH: diy-config.sh
+  UPLOAD_BIN_DIR: false
+  UPLOAD_FIRMWARE: true
+  UPLOAD_RELEASE: true
+  TZ: Asia/Shanghai
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    env:
+      GOTOOLCHAIN: go1.23.6  # Toolchain version locked
+    steps:
+    env:
+  GOTOOLCHAIN: go1.23.6
+
+steps:
+- name: Set up Go
+  uses: actions/setup-go@v5
+  with:
+    go-version: '1.23.6'
+    cache: false
+
+- name: Verify
+  run: |
+    # 查看实际安装路径
+    echo "Go path: $(which go)"
+    # 应输出 /opt/hostedtoolcache/go/1.23.6/x64/bin/go
+    go version
