@@ -37,17 +37,6 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.23.6'
-        cache: false
-
-    - name: Verify Go version
-      run: |
-        echo "GOTOOLCHAIN: $GOTOOLCHAIN"
-        go version
-
     - name: Initialization environment
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -93,6 +82,14 @@ jobs:
         chmod +x $DIY_P2_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
+
+    - name: Install Go
+      run: |
+        sudo mkdir -p /usr/local/go
+        wget -q https://go.dev/dl/go1.23.6.linux-amd64.tar.gz
+        sudo tar -C /usr/local/go -xzf go1.23.6.linux-amd64.tar.gz --strip-components=1
+        sudo chmod -R 755 /usr/local/go
+        echo "/usr/local/go/bin" >> $GITHUB_PATH
 
     - name: Download package
       id: package
