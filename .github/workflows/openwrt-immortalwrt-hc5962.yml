@@ -6,7 +6,7 @@ on:
 
 env:
   REPO_URL: https://github.com/immortalwrt/immortalwrt
-  REPO_BRANCH: openwrt-23.05
+  REPO_BRANCH: v23.05.4
   FEEDS_CONF: feeds.conf.default
   CONFIG_FILE: .config
   DIY_P1_SH: diy-plug-immortalwrt.sh
@@ -19,19 +19,13 @@ env:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    env:
-      GOTOOLCHAIN: go1.23.6  # 全局锁定工具链版本
+    timeout-minutes: 180
 
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-  
-    - name: Nuclear cleanup Go
-      run: |
-        sudo rm -rf /usr/local/go* /usr/bin/go /usr/bin/gofmt \
-          /usr/lib/go-* /etc/apt/sources.list.d/golang* \
-          /opt/hostedtoolcache/go
-        sudo apt-get purge -y golang-* 2>/dev/null || true
+      with:
+        submodules: recursive
 
     - name: Initialization environment
       env:
@@ -40,35 +34,14 @@ jobs:
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
         sudo docker image prune --all --force
         sudo -E apt-get -qq update
-        sudo -E apt-get -qq update
-        sudo apt-get install -y \
-          build-essential clang flex g++ gawk gcc-multilib gettext git \
-          libncurses5-dev libssl-dev make python3 python3-distutils rsync \
-          unzip zlib1g-dev file wget jq time libxml2-dev liblzma-dev libjson-c-dev
+        sudo -E apt-get -qq install build-essential clang flex g++ gawk gcc-multilib gettext git \
+          libncurses5-dev libssl-dev make python3 python3-distutils python3-setuptools \
+          rsync unzip zlib1g-dev file wget jq time libxml2-dev liblzma-dev libjson-c-dev
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
-
-    - name: Manual install Go 1.23.6
-      run: |
-        wget -q --show-progress --progress=bar:force https://go.dev/dl/go1.23.6.linux-amd64.tar.gz
-        sudo tar -C /usr/local -xzf go1.23.6.linux-amd64.tar.gz
-        sudo ln -vsf /usr/local/go/bin/go /usr/bin/go
-        sudo ln -vsf /usr/local/go/bin/gofmt /usr/bin/gofmt
-        echo "GOROOT=/usr/local/go" | sudo tee -a /etc/environment
-        echo "PATH=/usr/local/go/bin:$PATH" | sudo tee -a /etc/environment
-
-    - name: Verify Go Installation
-      run: |
-        source /etc/environment
-        echo "=== Go验证 ==="
-        echo "Go路径: $(which go)"
-        echo "Go版本: $(go version)"
-        echo "GOROOT: $(go env GOROOT)"
-        echo "工具链设置: $(go env GOTOOLCHAIN)"
-        ls -l /usr/bin/go /usr/local/go/bin/go
 
     - name: Clone source code
       working-directory: /workdir
@@ -87,9 +60,9 @@ jobs:
     - name: Update feeds
       run: cd openwrt && ./scripts/feeds update -a
 
-    - name: Reinstall feeds
-      run: cd openwrt && ./scripts/feeds update -i && ./scripts/feeds install -a
-   
+    - name: Install feeds
+      run: cd openwrt && ./scripts/feeds install -a
+
     - name: Load custom configuration
       run: |
         [ -e files ] && mv files openwrt/files
@@ -112,12 +85,6 @@ jobs:
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        # 强制加载全局环境变量
-        source /etc/environment
-        # 双重锁定工具链
-        export GOTOOLCHAIN=go1.23.6
-        go env -w GOTOOLCHAIN=go1.23.6
-        
         make -j$(nproc) || make -j1 || make -j1 V=s
         echo "status=success" >> $GITHUB_OUTPUT
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
