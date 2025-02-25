@@ -1,6 +1,8 @@
 name: Golang-Test
 
-on: [push]
+on:
+  repository_dispatch:
+  workflow_dispatch:
 
 jobs:
   build:
