@@ -1,40 +1,30 @@
 #!/bin/bash
-#
-# https://github.com/P3TERX/Actions-OpenWrt
-# File name: DIY_P1_SH
-# Description: OpenWrt DIY script part 1 (Before Update feeds)
-#
-# Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
-#
-# This is free software, licensed under the MIT License.
-# See /LICENSE for more information.
-#
 
-# Uncomment a feed source
-#sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
+# === 修改点1：移除会覆盖Go版本的操作 ===
+# 原始问题代码：
+# rm -rf feeds/packages/lang/golang
+# git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
 
-# Add a feed source
-#echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
-#echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
-#echo 'src-git packages https://github.com/kiddin9/openwrt-packages.git' >>feeds.conf.default
-#sed -i '1i src-git kenzo https://github.com/kenzok8/small-package' feeds.conf.default
-#sed -i '2i src-git small https://github.com/kenzok8/small' feeds.conf.default
-#sed -i '1i src-git haibo https://github.com/haiibo/openwrt-packages' feeds.conf.default
+# 修改后：
+# 保留官方Go配置，仅更新v2ray-geodata
+rm -rf feeds/packages/net/v2ray-geodata
+git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
+
+# === 修改点2：修正依赖关系 ===
+# 添加Golang版本锁定（针对第三方包）
+sed -i '/golang-package.mk/s/$/\nGO_VERSION:=1.23.6\nGO_EXTRA_ARGS:=-compiler gc/' feeds/packages/lang/golang/golang/Makefile
+
+# === 修改点3：确保所有Go相关包使用系统GOROOT ===
+find package/*/ -name Makefile | xargs -i sed -i \
+  -e '/golang-package.mk/s#../../lang/golang#$(TOPDIR)/feeds/packages/lang/golang#g' \
+  -e '/GO_\(VERSION\|SRC\|PATH\)/d' {}  # 移除版本覆盖
+
+# Add alist&mosdns
+git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
+git clone https://github.com/sbwml/luci-app-alist package/alist
 
 # Add fros
 git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
-
-# Edit Makefile
-#find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/lang\/golang\/golang-package.mk/$(TOPDIR)\/feeds\/packages\/lang\/golang\/golang-package.mk/g' {}
-
-# Add alist&mosdns
-rm -rf feeds/packages/lang/golang
-rm -rf feeds/packages/net/v2ray-geodata
-#git clone https://github.com/wixxm/WikjxWrt-golang feeds/packages/lang/golang
-git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
-git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
-git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
-git clone https://github.com/sbwml/luci-app-alist package/alist
 
 # Add other
 git clone https://github.com/sirpdboy/luci-app-autotimeset package/luci-app-autotimeset
@@ -46,8 +36,3 @@ git clone https://github.com/sirpdboy/luci-app-advanced package/luci-app-advance
 cd openwrt/package
 rm -rf luci-theme-argon
 git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git luci-theme-argon
-
-# 添加FUSE相关包
-#git clone https://github.com/openwrt/packages -b openwrt-24.10 trd/packages
-#cp -rf trd/packages/utils/fuse feeds/packages/utils/
-#rm -rf trd
