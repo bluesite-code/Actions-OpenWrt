@@ -33,17 +33,19 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       GOTOOLCHAIN: go1.23.6  # Toolchain version locked
+      PATH: /usr/local/go/bin:${{ env.PATH }} 
 
     steps:
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.23.6'
-        cache: false
+    - name: Install Go 1.23.6
+      run: |
+        sudo mkdir -p /usr/local/go
+        wget -q https://go.dev/dl/go1.23.6.linux-amd64.tar.gz
+        sudo tar -C /usr/local/go -xzf go1.23.6.linux-amd64.tar.gz --strip-components=1
+        sudo chmod -R 755 /usr/local/go
 
     - name: Verify
       run: |
         # 查看实际安装路径
         echo "Go path: $(which go)"
-        # 应输出 /opt/hostedtoolcache/go/1.23.6/x64/bin/go
         go version
+        go env GOTOOLCHAIN
