@@ -7,16 +7,17 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       GOTOOLCHAIN: go1.23.6
-      PATH: $PATH:/usr/local/go/bin  # ✅ 将自定义路径追加到系统路径之后
+      PATH: $PATH:/usr/local/go/bin
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
+    # 必须先安装系统工具再执行代码检出
     - name: Install system dependencies
       run: |
         sudo apt-get update -y
-        sudo apt-get install -y tar wget  # 🔥 显式安装必要工具
+        sudo apt-get install -y tar wget ca-certificates
+
+    - name: Checkout code
+      uses: actions/checkout@v4  # ✅ 现在可以正常使用tar解压代码
 
     - name: Install Go 1.23.6
       run: |
@@ -28,7 +29,7 @@ jobs:
     - name: Verify environment
       run: |
         echo "PATH: $PATH"
-        which go  # 应输出 /usr/local/go/bin/go
+        which go
         go version
 
     - name: Build project
