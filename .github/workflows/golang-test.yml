@@ -33,6 +33,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       GOTOOLCHAIN: go1.23.6  # Toolchain version locked
+      PATH: /usr/local/go/bin:$PATH
 
     steps:
     - name: Install Go 1.23.6
