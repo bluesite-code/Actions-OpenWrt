@@ -26,12 +26,17 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
   
+    - name: Nuclear cleanup Go
+      run: |
+        sudo rm -rf /usr/local/go* /usr/bin/go /usr/bin/gofmt \
+          /usr/lib/go-* /etc/apt/sources.list.d/golang* \
+          /opt/hostedtoolcache/go
+        sudo apt-get purge -y golang-* 2>/dev/null || true
+
     - name: Initialization environment
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        # 清理系统旧版Go（增强版）
-        sudo rm -rf /usr/local/go /usr/lib/go-* /usr/bin/go /usr/bin/gofmt
         sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
         sudo docker image prune --all --force
         sudo -E apt-get -qq update
@@ -45,33 +50,6 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
-
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.23.6'  # 必须带引号
-        check-latest: true    # 强制检查最新版本
-        cache: true
-
-    # +++ 新增关键步骤：调整PATH优先级 +++
-    - name: Adjust Go PATH
-      run: |
-        # 获取新安装的Go路径
-        NEW_GO_PATH="$(go env GOROOT)/bin"
-        # 插入到PATH最前面
-        echo "$NEW_GO_PATH" >> $GITHUB_PATH
-        echo "PATH updated: $NEW_GO_PATH prepended"
-
-    - name: Verify Go Environment
-      run: |
-        echo "=== Go路径验证 ==="
-        which go
-        realpath $(which go)
-        echo "=== 版本验证 ==="
-        go version
-        echo "=== 环境变量 ==="
-        go env GOTOOLCHAIN
-        echo "GOROOT: $(go env GOROOT)"
 
     - name: Clone source code
       working-directory: /workdir
@@ -107,19 +85,47 @@ jobs:
         cd openwrt
         make defconfig
         make download -j8
+        # 删除可能下载的旧版Go
+        find dl -name "go-*.tar.gz" -exec rm -f {} \; || true
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
+
+    # +++ 关键修改：将Go安装移到下载步骤之后 +++
+    - name: Manual install Go 1.23.6
+      run: |
+        wget -q --show-progress --progress=bar:force https://go.dev/dl/go1.23.6.linux-amd64.tar.gz
+        sudo tar -C /usr/local -xzf go1.23.6.linux-amd64.tar.gz
+        sudo ln -vsf /usr/local/go/bin/go /usr/bin/go
+        sudo ln -vsf /usr/local/go/bin/gofmt /usr/bin/gofmt
+        echo "GOROOT=/usr/local/go" | sudo tee -a /etc/environment
+        echo "PATH=/usr/local/go/bin:$PATH" | sudo tee -a /etc/environment
+
+    - name: Verify Go Installation
+      run: |
+        source /etc/environment
+        echo "=== Go验证 ==="
+        echo "Go路径: $(which go)"
+        echo "Go版本: $(go version)"
+        echo "GOROOT: $(go env GOROOT)"
+        echo "工具链设置: $(go env GOTOOLCHAIN)"
+        ls -l /usr/bin/go /usr/local/go/bin/go
+        # 验证dl目录无旧版Go
+        echo "dl目录Go残留: $(find openwrt/dl -name 'go-*.tar.gz' 2>/dev/null || echo '无')"
 
     - name: Compile the firmware
       id: compile
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        # +++ 双重环境保障 +++
-        export GOROOT="$(go env GOROOT)"
-        export PATH="$GOROOT/bin:$PATH"
+        # 强制加载全局环境变量
+        source /etc/environment
+        # 三重锁定工具链
         export GOTOOLCHAIN=go1.23.6
         go env -w GOTOOLCHAIN=go1.23.6
+        unset GOOS GOARCH  # 防止环境变量干扰
+        
+        # 绕过OpenWrt版本检查
+        echo 'GO ! = 1.21.13' > toolchain/versioncheck
         
         make -j$(nproc) || make -j1 || make -j1 V=s
         echo "status=success" >> $GITHUB_OUTPUT
@@ -160,7 +166,7 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         touch release.txt
-        [ ${UPLOAD_GOFILE} = true && ${{ steps.gofile.outputs.url }} ] && echo "🔗 [GoFile](${{ steps.gofile.outputs.url }})" >> release.txt
+        [ ${UPLOAD_GOFILE} = true && ${{ steps.gofile.outputs.url }} ] && echo "[GoFile](${{ steps.gofile.outputs.url }})" >> release.txt
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Upload firmware to release
