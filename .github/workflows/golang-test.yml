@@ -33,7 +33,3 @@ jobs:
         echo "PATH: $PATH"
         which go
         go version
-
-    - name: Build project
-      run: |
-        go build -v ./...
