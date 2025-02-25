@@ -47,7 +47,7 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.23.6'
-        cache: flase
+        cache: false
 
     - name: Verify Go Environment
       run: |
@@ -105,7 +105,6 @@ jobs:
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
 
-    # 后续步骤保持不变...
     - name: Check space usage
       if: (!cancelled())
       run: df -hT
