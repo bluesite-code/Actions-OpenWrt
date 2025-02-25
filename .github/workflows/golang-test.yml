@@ -1,53 +1,36 @@
-    #
-# https://github.com/P3TERX/Actions-OpenWrt
-#
-# File: .github/workflows/openwrt-bulder.yml
-# Description: Build OpenWrt using GitHub Actions
-#
-# Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
-#
-# This is free software, licensed under the MIT License.
-# See /LICENSE for more information.
-#
-
 name: Golang-Test
 
-on:
-  repository_dispatch:
-  workflow_dispatch:
-
-env:
-  REPO_URL: https://github.com/immortalwrt/immortalwrt
-  REPO_BRANCH: openwrt-23.05
-  FEEDS_CONF: feeds.conf.default
-  CONFIG_FILE: .config
-  DIY_P1_SH: diy-plug-immortalwrt.sh
-  DIY_P2_SH: diy-config.sh
-  UPLOAD_BIN_DIR: false
-  UPLOAD_FIRMWARE: true
-  UPLOAD_RELEASE: true
-  TZ: Asia/Shanghai
+on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-22.04
     env:
       GOTOOLCHAIN: go1.23.6
-      PATH: /usr/local/go/bin:$PATH
+      PATH: $PATH:/usr/local/go/bin  # ✅ 将自定义路径追加到系统路径之后
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Install Go
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y tar wget  # 🔥 显式安装必要工具
+
+    - name: Install Go 1.23.6
       run: |
         sudo mkdir -p /usr/local/go
         wget -q https://go.dev/dl/go1.23.6.linux-amd64.tar.gz
         sudo tar -C /usr/local/go -xzf go1.23.6.linux-amd64.tar.gz --strip-components=1
         sudo chmod -R 755 /usr/local/go
 
-    - name: Verify
+    - name: Verify environment
       run: |
         echo "PATH: $PATH"
         which go  # 应输出 /usr/local/go/bin/go
-        go version  # 应显示 go1.23.6
+        go version
+
+    - name: Build project
+      run: |
+        go build -v ./...
