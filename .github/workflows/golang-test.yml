@@ -26,27 +26,35 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
   
+    # +++ 强化Go环境清理 +++
     - name: Nuclear cleanup Go
       run: |
-        sudo rm -rf /usr/local/go* /usr/bin/go /usr/bin/gofmt \
-          /usr/lib/go-* /etc/apt/sources.list.d/golang* \
-          /opt/hostedtoolcache/go
-        sudo apt-get purge -y golang-* 2>/dev/null || true
+        # 清除所有已知Go安装路径（包括用户级残留）
+        sudo rm -rf \
+          /usr/local/go* \
+          /usr/bin/go \
+          /usr/bin/gofmt \
+          /usr/lib/go-* \
+          /etc/apt/sources.list.d/golang* \
+          /opt/hostedtoolcache/go \
+          ~/go \
+          ~/.cache/go-build \
+          /tmp/go*
+        
+        # 清除apt安装的Go
+        sudo apt-get purge -y golang-* golang golang-go &>/dev/null || true
+        sudo apt-get autoremove -y
 
     - name: Initialization environment
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
-        sudo docker image prune --all --force
-        sudo -E apt-get -qq update
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
         sudo -E apt-get -qq update
         sudo apt-get install -y \
           build-essential clang flex g++ gawk gcc-multilib gettext git \
           libncurses5-dev libssl-dev make python3 python3-distutils rsync \
           unzip zlib1g-dev file wget jq time libxml2-dev liblzma-dev libjson-c-dev
-        sudo -E apt-get -qq autoremove --purge
-        sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
@@ -79,14 +87,45 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
+    - name: Install Go 1.23.6 (Isolated)
+      run: |
+        export GO_VERSION=1.23.6
+        export GO_ROOT=/opt/go/$GO_VERSION
+
+        # 下载官方二进制包
+        wget -q --tries=5 --retry-connrefused -O /tmp/go.tar.gz \
+          "https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz"
+
+        # 创建隔离安装目录
+        sudo mkdir -p $GO_ROOT
+        sudo tar -xzf /tmp/go.tar.gz -C $GO_ROOT --strip-components=1
+
+        # 设置系统级符号链接
+        sudo ln -sf $GO_ROOT/bin/go /usr/local/bin/go
+        sudo ln -sf $GO_ROOT/bin/gofmt /usr/local/bin/gofmt
+
+        # 写入全局环境配置
+        echo "export GOROOT=$GO_ROOT" | sudo tee /etc/profile.d/go.sh
+        echo "export PATH=\$GOROOT/bin:\$PATH" | sudo tee -a /etc/profile.d/go.sh
+
+    - name: Verify Go Environment
+      run: |
+        source /etc/profile.d/go.sh
+        echo "=== Go Version ==="
+        go version
+        echo "\n=== Binary Path ==="
+        readlink -f $(which go)
+        echo "\n=== GOROOT ==="
+        go env GOROOT
+    
     - name: Download package
       id: package
       run: |
         cd openwrt
         make defconfig
-        make download -j8
         # 删除可能下载的旧版Go
-        find dl -name "go-*.tar.gz" -exec rm -f {} \; || true
+        find dl -name "go-*.tar.gz" -delete 2>/dev/null || true
+        make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
@@ -117,17 +156,19 @@ jobs:
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        # 强制加载全局环境变量
-        source /etc/environment
-        # 三重锁定工具链
-        export GOTOOLCHAIN=go1.23.6
-        go env -w GOTOOLCHAIN=go1.23.6
-        unset GOOS GOARCH  # 防止环境变量干扰
         
-        # 绕过OpenWrt版本检查
-        echo 'GO ! = 1.21.13' > toolchain/versioncheck
-        
-        make -j$(nproc) || make -j1 || make -j1 V=s
+        # 使用纯净环境编译（关键参数）
+        env -i \
+          PATH="/opt/go/1.23.6/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
+          GOROOT=/opt/go/1.23.6 \
+          GOTOOLCHAIN=go1.23.6 \
+          make -j$(nproc) V=s \
+            GO=/opt/go/1.23.6/bin/go \
+            GOROOT=/opt/go/1.23.6 || \
+        make -j1 V=s \
+            GO=/opt/go/1.23.6/bin/go \
+            GOROOT=/opt/go/1.23.6
+
         echo "status=success" >> $GITHUB_OUTPUT
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
