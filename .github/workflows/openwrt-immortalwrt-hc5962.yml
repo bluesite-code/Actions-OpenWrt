@@ -1,4 +1,4 @@
-name: Openwrt-official-HC5962
+name: Openwrt-immortalwrt-HC5962
 
 on:
   repository_dispatch:
