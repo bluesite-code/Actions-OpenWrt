@@ -29,8 +29,8 @@ find ./ | grep Makefile | grep v2ray-geodata | xargs rm -f
 find ./ | grep Makefile | grep mosdns | xargs rm -f
 find ./ | grep Makefile | grep alist | xargs rm -f
 rm -rf feeds/packages/lang/golang
-git clone https://github.com/wixxm/WikjxWrt-golang feeds/packages/lang/golang || error "克隆 golang 仓库失败！"
-echo -e "$ICON_SUCCESS golang 替换完成。"
+git clone https://github.com/wixxm/WikjxWrt-golang feeds/packages/lang/golang || error "克隆 golang 仓库失败"
+echo -e "$ICON_SUCCESS golang 替换完成"
 #git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
 git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
 git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
