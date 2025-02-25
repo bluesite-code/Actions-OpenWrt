@@ -28,10 +28,10 @@ git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
 #find package/*/ -maxdepth 2 -path "*/Makefile" | xargs -i sed -i 's/..\/..\/lang\/golang\/golang-package.mk/$(TOPDIR)\/feeds\/packages\/lang\/golang\/golang-package.mk/g' {}
 
 # Add alist&mosdns
-#rm -rf feeds/packages/lang/golang
+rm -rf feeds/packages/lang/golang
 rm -rf feeds/packages/net/v2ray-geodata
 #git clone https://github.com/wixxm/WikjxWrt-golang feeds/packages/lang/golang
-#git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
+git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
 git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
 git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
 git clone https://github.com/sbwml/luci-app-alist package/alist
