@@ -9,7 +9,6 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       GOTOOLCHAIN: go1.23.6
-      PATH: $PATH:/usr/local/go/bin
 
     steps:
     # 必须先安装系统工具再执行代码检出
@@ -19,7 +18,7 @@ jobs:
         sudo apt-get install -y tar wget ca-certificates
 
     - name: Checkout code
-      uses: actions/checkout@v4  # ✅ 现在可以正常使用tar解压代码
+      uses: actions/checkout@v4
 
     - name: Install Go 1.23.6
       run: |
@@ -27,6 +26,7 @@ jobs:
         wget -q https://go.dev/dl/go1.23.6.linux-amd64.tar.gz
         sudo tar -C /usr/local/go -xzf go1.23.6.linux-amd64.tar.gz --strip-components=1
         sudo chmod -R 755 /usr/local/go
+        echo "/usr/local/go/bin" >> $GITHUB_PATH
 
     - name: Verify environment
       run: |
