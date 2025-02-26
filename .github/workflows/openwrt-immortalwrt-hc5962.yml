@@ -50,22 +50,50 @@ jobs:
 
     - name: Load custom configuration
       run: |
-        mv feeds.conf.default /workdir/openwrt/feeds.conf.default
-        mv files /workdir/openwrt/files
-        mv .config /workdir/openwrt/.config
+        # 文件移动部分（条件判断）
+        if [ -f feeds.conf.default ]; then
+          mv feeds.conf.default /workdir/openwrt/feeds.conf.default
+          echo "Moved feeds.conf.default"
+        else
+          echo "feeds.conf.default not found, skipping"
+        fi
+
+        if [ -d files ]; then
+          mv files /workdir/openwrt/files
+          echo "Moved files directory"
+        else
+          echo "files directory not found, skipping"
+        fi
+
+        if [ -f .config ]; then
+          mv .config /workdir/openwrt/.config
+          echo "Moved .config"
+        else
+          echo ".config not found, skipping"
+        fi
+
         cd /workdir/openwrt
 
-        # 替换 Golang feeds
-        chmod +x $GITHUB_WORKSPACE/$DIY_P1_SH
-        $GITHUB_WORKSPACE/$DIY_P1_SH
+        # Golang feed 替换（强制校验）
+        if [ -f $GITHUB_WORKSPACE/$DIY_P1_SH ]; then
+          chmod +x $GITHUB_WORKSPACE/$DIY_P1_SH
+          $GITHUB_WORKSPACE/$DIY_P1_SH
+        else
+          echo "DIY_P1_SH script not found!"
+          exit 1
+        fi
 
-        # 更新 feeds
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
-        # 通过 diy-config.sh 写入配置
-        chmod +x $GITHUB_WORKSPACE/$DIY_P2_SH
-        $GITHUB_WORKSPACE/$DIY_P2_SH
+        # 配置写入（强制校验）
+        if [ -f $GITHUB_WORKSPACE/$DIY_P2_SH ]; then
+          chmod +x $GITHUB_WORKSPACE/$DIY_P2_SH
+          $GITHUB_WORKSPACE/$DIY_P2_SH
+        else
+          echo "DIY_P2_SH script not found!"
+          exit 1
+        fi
 
     - name: Clean cache
       run: cd /workdir/openwrt && make clean
