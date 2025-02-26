@@ -126,8 +126,18 @@ jobs:
 
     - name: Verify Golang Feed
       run: |
-        cd /workdir/openwrt/feeds/packages/lang/golang
-        git remote -v | grep sbwml
+        echo "=== 实时路径验证 ==="
+        pwd
+        ls -l feeds/packages/lang/golang
+        
+        echo "=== golang-version.mk 存在性检查 ==="
+        if [ -f feeds/packages/lang/golang/golang-version.mk ]; then
+          echo "✅ 验证通过"
+          cat feeds/packages/lang/golang/golang-version.mk
+        else
+          echo "::error::关键文件缺失，请检查 feed 替换流程"
+          exit 1
+        fi
 
     - name: Check Golang config
       run: |
