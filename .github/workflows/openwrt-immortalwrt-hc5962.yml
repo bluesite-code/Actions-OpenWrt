@@ -100,10 +100,29 @@ jobs:
 
     - name: Dump golang-version.mk
       run: |
-        cd /workdir/openwrt/feeds/packages/lang/golang
-        echo "=== FILE START ==="
-        cat golang-version.mk
-        echo "=== FILE END ==="
+        cd /workdir/openwrt/feeds/packages/lang/golang || {
+          echo "❌ Error entering golang feed directory";
+          exit 1
+        }
+
+        if [ ! -f golang-version.mk ]; then
+          echo "::warning::golang-version.mk missing, checking alternatives..."
+          ALT_PATH=$(find ../ -name "golang-version.mk" -print -quit)
+          
+          if [ -n "$ALT_PATH" ]; then
+            echo "ℹ️ Found alternative path: $ALT_PATH"
+            echo "=== FILE CONTENT BEGIN ==="
+            cat $ALT_PATH
+            echo "=== FILE CONTENT END ==="
+          else
+            echo "::error::golang-version.mk not found in any known locations"
+            exit 1
+          fi
+        else
+          echo "=== FILE CONTENT BEGIN ==="
+          cat golang-version.mk
+          echo "=== FILE CONTENT END ==="
+        fi
 
     - name: Verify Golang Feed
       run: |
