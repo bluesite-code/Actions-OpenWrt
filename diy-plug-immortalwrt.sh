@@ -3,22 +3,7 @@
 
 set -eo pipefail  # 增强错误检测
 
-# 第一阶段：添加 feed 源
-function add_feeds() {
-    echo "🔧 配置额外软件源..."
-    # 注意：建议逐个添加并验证
-    [ -f feeds.conf.default ] || touch feeds.conf.default
-    {
-        echo 'src-git helloworld https://github.com/fw876/helloworld'
-        echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall'
-        echo 'src-git packages https://github.com/kiddin9/kwrt-packages.git'
-        echo 'src-git kenzo https://github.com/kenzok8/small-package'
-        echo 'src-git small https://github.com/kenzok8/small'
-        echo 'src-git haibo https://github.com/haiibo/openwrt-packages'
-    } >> feeds.conf.default
-}
-
-# 第二阶段：Golang 源替换（带增强验证）
+# Golang 源替换（带增强验证）
 function replace_golang() {
     echo "🔄 开始替换 Golang 源..."
     local REPO_URL="https://github.com/sbwml/packages_lang_golang"
@@ -57,7 +42,7 @@ function replace_golang() {
     done
 }
 
-# 第三阶段：安装插件
+# 安装插件
 function install_plugins() {
     echo "📦 安装插件组件..."
     local PLUGINS=(
@@ -80,7 +65,7 @@ function install_plugins() {
     done
 }
 
-# 第四阶段：更新 feeds
+# 更新 feeds
 function update_feeds() {
     echo "🔄 更新 feeds 缓存..."
     ./scripts/feeds update -a -f
@@ -91,6 +76,10 @@ function update_feeds() {
 main() {
     add_feeds
     replace_golang    # 必须在其他插件前执行
+    echo "=== 当前工作目录 ==="
+pwd
+echo "=== 目录结构预览 ==="
+tree -L 3 feeds/packages/lang || ls -lR feeds/packages/lang
     install_plugins
     update_feeds      # 最后统一更新
 
