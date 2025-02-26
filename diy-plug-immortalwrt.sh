@@ -1,7 +1,5 @@
 #!/bin/bash
 #
-
-
 # Add a feed source
 #echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
 #echo 'src-git passwall https://github.com/xiaorouji/openwrt-passwall' >>feeds.conf.default
@@ -13,43 +11,27 @@
 # Add fros
 git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
 
-# Add alist&mosdns
-
-# 删除旧 golang feed (增强版)
-rm -rf feeds/packages/lang/golang 2>/dev/null
-echo "🗑️ 已清除旧 Golang feed"
-
-# 克隆新 feed 带重试机制
-for i in {1..3}; do
-  git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
-  if [ $? -eq 0 ]; then
-    echo "✅ 第 $i 次尝试：Golang feed 克隆成功"
-    break
-  else
-    echo "⚠️ 第 $i 次尝试：克隆失败，等待 5 秒后重试..."
-    sleep 5
-    rm -rf feeds/packages/lang/golang  # 清理不完整克隆
-  fi
-done
-
-# 严格验证克隆结果
-if [ -d feeds/packages/lang/golang ]; then
-  echo "🔍 新 Golang feed 结构验证："
-  ls -l feeds/packages/lang/golang
-  echo "--- 关键文件检查 ---"
-  [ -f feeds/packages/lang/golang/golang-version.mk ] && echo "✔️ golang-version.mk 存在"
-  [ -f feeds/packages/lang/golang/Makefile ] && echo "✔️ Makefile 存在"
+# 增强版 Golang feed 替换
+rm -rf feeds/packages/lang/golang
+echo "🔄 开始克隆 Golang 23.x 源..."
+if git clone --depth 1 https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang; then
+    echo "✅ 克隆成功"
+    echo "文件列表："
+    ls -l feeds/packages/lang/golang
 else
-  echo "❌ 致命错误：Golang feed 替换失败！"
-  exit 1
+    echo "❌ 克隆失败！请检查："
+    echo "1. 分支是否存在：https://github.com/sbwml/packages_lang_golang/tree/23.x"
+    echo "2. 网络连接状态"
+    exit 1
 fi
 
+# Add alist&mosdns
 find ./ | grep Makefile | grep v2ray-geodata | xargs rm -f
 find ./ | grep Makefile | grep mosdns | xargs rm -f
 find ./ | grep Makefile | grep alist | xargs rm -f
 #rm -rf feeds/packages/lang/golang
 #git clone https://github.com/wixxm/WikjxWrt-golang feeds/packages/lang/golang
-git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
+#git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
 git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
 git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
 git clone https://github.com/sbwml/luci-app-alist package/alist
