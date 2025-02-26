@@ -47,42 +47,47 @@ jobs:
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
-
-    - name: Load custom feeds
-      run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
-        chmod +x $DIY_P1_SH
-        cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P1_SH
-
+        
     - name: Load custom configuration
       run: |
-        # 移动文件和配置
+        # 移动所有配置文件（feeds.conf.default、files、.config）
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
         [ -e files ] && mv files openwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-        
+
         # 设置脚本权限
         chmod +x $DIY_P1_SH
         chmod +x $DIY_P2_SH
-        
+
         # 进入工作目录
         cd openwrt
-        
-        # 关键步骤1：替换 Golang feeds
+
+        # 执行 DIY_P1_SH（替换 Golang feeds）
         $GITHUB_WORKSPACE/$DIY_P1_SH
-        
-        # 关键步骤2：更新并安装 feeds
+
+        # 更新并安装 feeds（关键！）
         ./scripts/feeds update -a
         ./scripts/feeds install -a
-        
-        # 执行其他自定义配置
+
+        # 执行其他配置（DIY_P2_SH）
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
     - name: Verify Golang feeds
       run: |
         cd openwrt/feeds/packages/lang/golang
-        git remote -v  # 预期输出 sbwml 仓库
-        git log -1 --oneline  # 确认分支为 23.x
+        git remote -v  # 应指向 sbwml/golang 仓库
+        git log -1 --oneline  # 确认为 23.x 分支
+
+    - name: Download package
+      run: |
+        cd openwrt
+        make defconfig
+        make download -j8
+
+    - name: Compile the firmware
+      run: |
+        cd openwrt
+        make -j$(nproc) V=s
 
     - name: Download package
       id: package
