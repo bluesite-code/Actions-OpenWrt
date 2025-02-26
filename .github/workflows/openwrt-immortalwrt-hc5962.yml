@@ -47,36 +47,33 @@ jobs:
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
-        
+
     - name: Load custom configuration
       run: |
-        # 移动所有配置文件（feeds.conf.default、files、.config）
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
-        [ -e files ] && mv files openwrt/files
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-
-        # 设置脚本权限
-        chmod +x $DIY_P1_SH
-        chmod +x $DIY_P2_SH
-
-        # 进入工作目录
+        mv feeds.conf.default openwrt/feeds.conf.default
+        mv files openwrt/files
+        mv .config openwrt/.config
         cd openwrt
-
-        # 执行 DIY_P1_SH（替换 Golang feeds）
-        $GITHUB_WORKSPACE/$DIY_P1_SH
-
-        # 更新并安装 feeds（关键！）
+        chmod +x $GITHUB_WORKSPACE/$DIY_P1_SH
+        $GITHUB_WORKSPACE/$DIY_P1_SH  # 替换 Golang
         ./scripts/feeds update -a
         ./scripts/feeds install -a
+        $GITHUB_WORKSPACE/$DIY_P2_SH  # 其他配置
 
-        # 执行其他配置（DIY_P2_SH）
-        $GITHUB_WORKSPACE/$DIY_P2_SH
-
-    - name: Verify Golang feeds
+    - name: Dump golang-version.mk
       run: |
         cd openwrt/feeds/packages/lang/golang
-        git remote -v  # 应指向 sbwml/golang 仓库
-        git log -1 --oneline  # 确认为 23.x 分支
+        echo "=== FILE START ==="
+        cat golang-version.mk
+        echo "=== FILE END ==="
+    
+    - name: Clean cache
+      run: cd openwrt && make clean
+
+    - name: Verify Golang
+      run: |
+        cd openwrt/feeds/packages/lang/golang
+        git remote -v | grep sbwml
 
     - name: Download package
       id: package
