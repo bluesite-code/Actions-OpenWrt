@@ -1,17 +1,6 @@
 #!/bin/bash
 #
-# https://github.com/P3TERX/Actions-OpenWrt
-# File name: DIY_P1_SH
-# Description: OpenWrt DIY script part 1 (Before Update feeds)
-#
-# Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
-#
-# This is free software, licensed under the MIT License.
-# See /LICENSE for more information.
-#
 
-# Uncomment a feed source
-#sed -i 's/^#\(.*helloworld\)/\1/' feeds.conf.default
 
 # Add a feed source
 #echo 'src-git helloworld https://github.com/fw876/helloworld' >>feeds.conf.default
@@ -25,10 +14,40 @@
 git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
 
 # Add alist&mosdns
+
+# 删除旧 golang feed (增强版)
+rm -rf feeds/packages/lang/golang 2>/dev/null
+echo "🗑️ 已清除旧 Golang feed"
+
+# 克隆新 feed 带重试机制
+for i in {1..3}; do
+  git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
+  if [ $? -eq 0 ]; then
+    echo "✅ 第 $i 次尝试：Golang feed 克隆成功"
+    break
+  else
+    echo "⚠️ 第 $i 次尝试：克隆失败，等待 5 秒后重试..."
+    sleep 5
+    rm -rf feeds/packages/lang/golang  # 清理不完整克隆
+  fi
+done
+
+# 严格验证克隆结果
+if [ -d feeds/packages/lang/golang ]; then
+  echo "🔍 新 Golang feed 结构验证："
+  ls -l feeds/packages/lang/golang
+  echo "--- 关键文件检查 ---"
+  [ -f feeds/packages/lang/golang/golang-version.mk ] && echo "✔️ golang-version.mk 存在"
+  [ -f feeds/packages/lang/golang/Makefile ] && echo "✔️ Makefile 存在"
+else
+  echo "❌ 致命错误：Golang feed 替换失败！"
+  exit 1
+fi
+
 find ./ | grep Makefile | grep v2ray-geodata | xargs rm -f
 find ./ | grep Makefile | grep mosdns | xargs rm -f
 find ./ | grep Makefile | grep alist | xargs rm -f
-rm -rf feeds/packages/lang/golang
+#rm -rf feeds/packages/lang/golang
 #git clone https://github.com/wixxm/WikjxWrt-golang feeds/packages/lang/golang
 git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang
 git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
