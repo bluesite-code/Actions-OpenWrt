@@ -50,65 +50,59 @@ jobs:
 
     - name: Load custom configuration
       run: |
-        # 新增网络诊断 ▼▼▼
-        echo "=== 预检网络连通性 ==="
-        ping -c 4 github.com || true
-        curl -I https://github.com/sbwml/packages_lang_golang
-
-        # 文件移动部分（增加错误处理）
-        if [ -f feeds.conf.default ]; then
-          mv -v feeds.conf.default /workdir/openwrt/feeds.conf.default
-        else
-          echo "::warning::feeds.conf.default 未找到"
-        fi
-
-        [ -d files ] && mv -v files /workdir/openwrt/files || echo "::warning::files 目录未找到"
-        [ -f .config ] && mv -v .config /workdir/openwrt/.config || echo "::warning::.config 未找到"
-
+        # 增强调试信息 ▼▼▼
+        echo "=== 初始目录结构 ==="
+        ls -l
+        echo "=== 工作区路径 ==="
+        echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+        echo "当前目录: $(pwd)"
+        echo "=== 存储库内容 ==="
+        tree -L 2 || ls -al
+    
+        # 使用 rsync 安全传输文件 ▼▼▼
+        echo "=== 同步配置文件 ==="
+        sudo mkdir -p /workdir/openwrt
+        sudo chown -R $USER:$GROUPS /workdir/openwrt
+    
+        [ -f feeds.conf.default ] && rsync -av --ignore-existing feeds.conf.default /workdir/openwrt/
+        [ -d files ] && rsync -av --progress files/ /workdir/openwrt/files/
+        [ -f .config ] && rsync -av --progress .config /workdir/openwrt/
+    
+        # 进入工作目录 ▼▼▼
         cd /workdir/openwrt
-
-        # 增强的 Golang 替换脚本执行 ▼▼▼
+        echo "=== 目标目录结构 ==="
+        tree -L 2 || ls -al
+    
+        # 确保 feeds.conf.default 存在 ▼▼▼
+        [ -f feeds.conf.default ] || touch feeds.conf.default
+    
+        # 执行增强版脚本 ▼▼▼
         if [ -f $GITHUB_WORKSPACE/$DIY_P1_SH ]; then
           echo "=== 执行增强版 diy-plug-immortalwrt.sh ==="
           chmod +x $GITHUB_WORKSPACE/$DIY_P1_SH
+          
+          # 添加环境变量传递
+          export GITHUB_WORKSPACE
           $GITHUB_WORKSPACE/$DIY_P1_SH 2>&1 | tee diy-plug.log
         else
           echo "::error::DIY 脚本 $DIY_P1_SH 未找到!"
           exit 1
         fi
-
-        # 强制更新 feeds ▼▼▼
+    
+        # 强制更新 feeds (带重复检查) ▼▼▼
+        echo "=== 预处理 feeds.conf.default ==="
+        awk '!seen[$0]++' feeds.conf.default > feeds.conf.tmp && mv feeds.conf.tmp feeds.conf.default
+        echo "=== 去重后的 feeds.conf ==="
+        cat feeds.conf.default
+    
         echo "=== 强制更新 feeds ==="
-        ./scripts/feeds update -a -f
-        ./scripts/feeds install -a -f
+        ./scripts/feeds update -a -f || {
+          echo "::warning::首次更新失败，尝试清理后重试..."
+          rm -rf feeds
+          ./scripts/feeds update -a -f
+        }
+        ./scripts/feeds install -a -f --force-overwrite
         ./scripts/feeds list -i
-
-    - name: Clean cache
-      run: cd /workdir/openwrt && make clean
-
-    # 增强的 Golang 验证步骤 ▼▼▼
-    - name: Verify Golang Setup
-      run: |
-        echo "=== 深度验证 Golang 配置 ==="
-        cd /workdir/openwrt
-        
-        # 多维度验证
-        echo "1. 检查 feeds 列表:"
-        ./scripts/feeds list | grep -i golang
-        
-        echo "2. 检查文件系统:"
-        find feeds/packages/lang/golang -type f -name "golang-version.mk" -exec ls -l {} \; || true
-        
-        echo "3. 检查配置项:"
-        grep -i "CONFIG_GOLANG" .config || true
-        
-        # 关键文件存在性检查
-        if [ ! -f feeds/packages/lang/golang/golang-version.mk ]; then
-          echo "::error::关键文件验证失败！"
-          echo "=== 目录结构 ==="
-          tree -L 3 feeds/packages/lang
-          exit 1
-        fi
 
     - name: Download package
       id: package
