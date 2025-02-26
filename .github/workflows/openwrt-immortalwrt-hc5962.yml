@@ -100,28 +100,21 @@ jobs:
 
     - name: Dump golang-version.mk
       run: |
-        cd /workdir/openwrt/feeds/packages/lang/golang || {
-          echo "❌ Error entering golang feed directory";
-          exit 1
-        }
-
-        if [ ! -f golang-version.mk ]; then
-          echo "::warning::golang-version.mk missing, checking alternatives..."
-          ALT_PATH=$(find ../ -name "golang-version.mk" -print -quit)
-          
-          if [ -n "$ALT_PATH" ]; then
-            echo "ℹ️ Found alternative path: $ALT_PATH"
-            echo "=== FILE CONTENT BEGIN ==="
-            cat $ALT_PATH
-            echo "=== FILE CONTENT END ==="
-          else
-            echo "::error::golang-version.mk not found in any known locations"
-            exit 1
-          fi
+        # 使用绝对路径直接验证
+        echo "=== 开始验证 Golang 配置文件 ==="
+        FILE_PATH="/workdir/openwrt/feeds/packages/lang/golang/golang-version.mk"
+        
+        if [ -f "$FILE_PATH" ]; then
+          echo "✅ 找到 golang-version.mk 文件"
+          echo "=== 文件内容 ==="
+          cat $FILE_PATH
         else
-          echo "=== FILE CONTENT BEGIN ==="
-          cat golang-version.mk
-          echo "=== FILE CONTENT END ==="
+          echo "::error::关键文件 golang-version.mk 缺失！"
+          echo "故障排查建议："
+          echo "1. 检查 feeds.conf.default 是否包含正确源"
+          echo "2. 确认网络代理设置"
+          echo "3. 查看 diy-plug-immortalwrt.sh 的克隆操作日志"
+          exit 1
         fi
 
     - name: Verify Golang Feed
