@@ -50,44 +50,71 @@ jobs:
 
     - name: Load custom configuration
       run: |
-        mv feeds.conf.default openwrt/feeds.conf.default
-        mv files openwrt/files
-        mv .config openwrt/.config
-        cd openwrt
+        mv feeds.conf.default /workdir/openwrt/feeds.conf.default
+        mv files /workdir/openwrt/files
+        mv .config /workdir/openwrt/.config
+        cd /workdir/openwrt
+
+        # 替换 Golang feeds
         chmod +x $GITHUB_WORKSPACE/$DIY_P1_SH
-        $GITHUB_WORKSPACE/$DIY_P1_SH  # 替换 Golang
+        $GITHUB_WORKSPACE/$DIY_P1_SH
+
+        # 更新 feeds
         ./scripts/feeds update -a
         ./scripts/feeds install -a
-        $GITHUB_WORKSPACE/$DIY_P2_SH  # 其他配置
+
+        # 通过 diy-config.sh 写入配置
+        chmod +x $GITHUB_WORKSPACE/$DIY_P2_SH
+        $GITHUB_WORKSPACE/$DIY_P2_SH
+
+    - name: Clean cache
+      run: cd /workdir/openwrt && make clean
 
     - name: Dump golang-version.mk
       run: |
-        cd openwrt/feeds/packages/lang/golang
+        cd /workdir/openwrt/feeds/packages/lang/golang
         echo "=== FILE START ==="
         cat golang-version.mk
         echo "=== FILE END ==="
-    
-    - name: Clean cache
-      run: cd openwrt && make clean
 
-    - name: Verify Golang
+    - name: Verify Golang Feed
       run: |
-        cd openwrt/feeds/packages/lang/golang
+        cd /workdir/openwrt/feeds/packages/lang/golang
         git remote -v | grep sbwml
+
+    - name: Check Golang config
+      run: |
+        cd /workdir/openwrt
+        echo "=== GOLANG CONFIG ==="
+        grep "CONFIG_GOLANG" .config
+        echo "====================="
 
     - name: Download package
       id: package
       run: |
-        cd openwrt
+        cd /workdir/openwrt
         make defconfig
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
 
+    - name: Build Golang toolchain
+      run: |
+        cd /workdir/openwrt
+        make toolchain/golang/clean
+        make toolchain/golang/compile V=s
+
+    - name: Verify Golang toolchain
+      run: |
+        cd /workdir/openwrt
+        echo "=== GO VERSION ==="
+        find staging_dir/ -name "go" -exec {} version \;
+        echo "=================="
+
     - name: Compile the firmware
       id: compile
       run: |
-        cd openwrt
+        cd /workdir/openwrt
         echo -e "$(nproc) thread compile"
         make -j$(nproc) || make -j1 || make -j1 V=s
         echo "status=success" >> $GITHUB_OUTPUT
@@ -104,13 +131,13 @@ jobs:
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
         name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: openwrt/bin
+        path: /workdir/openwrt/bin
 
     - name: Organize files
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
-        cd openwrt/bin/targets/*/*
+        cd /workdir/openwrt/bin/targets/*/*
         rm -rf packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
