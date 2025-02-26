@@ -79,17 +79,6 @@ jobs:
         git log -1 --oneline  # 确认为 23.x 分支
 
     - name: Download package
-      run: |
-        cd openwrt
-        make defconfig
-        make download -j8
-
-    - name: Compile the firmware
-      run: |
-        cd openwrt
-        make -j$(nproc) V=s
-
-    - name: Download package
       id: package
       run: |
         cd openwrt
