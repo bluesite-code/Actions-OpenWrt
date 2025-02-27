@@ -46,10 +46,13 @@ jobs:
 
     - name: Pre-download binutils (GNU Mirror)
       run: |
+        mkdir -p /workdir/openwrt/dl
         cd /workdir/openwrt
          # 步骤1：清洁环境
-        make distclean
-        rm -rf dl/binutils-2.42* tmp/
+        if [ -d .git ]; then
+          make distclean
+          rm -rf dl/binutils-2.42* tmp/
+        fi
     
         # 使用 GNU 官方镜像网络（自动选择最快节点）
         wget --tries=5 --retry-connrefused --waitretry=30 --no-check-certificate \
