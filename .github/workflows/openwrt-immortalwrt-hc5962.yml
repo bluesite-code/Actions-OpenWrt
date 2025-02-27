@@ -50,7 +50,6 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
-    # 调整后的预下载步骤
     - name: Pre-download binutils (GNU Mirror)
       run: |
         cd /workdir/openwrt
@@ -68,13 +67,13 @@ jobs:
           "https://ftpmirror.gnu.org/binutils/binutils-2.42.tar.xz"
 
         # 动态更新哈希值
-        NEW_HASH=$(sha256sum dl/binutils-2.42.tar.xz | cut -d' ' -f1)
-        sed -i "s/HASH:=.*/HASH:=$NEW_HASH/" package/devel/binutils/Makefile
+      # NEW_HASH=$(sha256sum dl/binutils-2.42.tar.xz | cut -d' ' -f1)
+       # sed -i "s/HASH:=.*/HASH:=$NEW_HASH/" package/devel/binutils/Makefile
 
         # 验证操作
-        echo "=== 哈希更新验证 ==="
-        grep 'HASH:=' package/devel/binutils/Makefile
-        ls -lh dl/binutils-2.42.tar.xz
+       # echo "=== 哈希更新验证 ==="
+      #  grep 'HASH:=' package/devel/binutils/Makefile
+       # ls -lh dl/binutils-2.42.tar.xz
 
     - name: Load custom configuration
       run: |
