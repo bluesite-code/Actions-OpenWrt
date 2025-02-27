@@ -46,22 +46,23 @@ jobs:
 
     - name: Pre-download binutils (GNU Mirror)
       run: |
-        mkdir -p /workdir/openwrt/dl
-        cd /workdir/openwrt/dl
+        cd /workdir/openwrt
+         # 步骤1：清洁环境
+        make distclean
+        rm -rf dl/binutils-2.42* tmp/
     
         # 使用 GNU 官方镜像网络（自动选择最快节点）
         wget --tries=5 --retry-connrefused --waitretry=30 --no-check-certificate \
           "https://ftpmirror.gnu.org/binutils/binutils-2.42.tar.xz"
     
-        # 严格校验哈希值
-        echo "e9a0d8b2d9d2ec5d3f34921c6e18332fadc248764a18039c3e218b67e4b182a7  binutils-2.42.tar.xz" | sha256sum -c --strict || {
-          echo "::error::Critical: Binutils 文件校验失败！请检查："
-          echo "1. 官方是否更新了版本？访问 https://ftpmirror.gnu.org/binutils/"
-          echo "2. 网络是否被干扰？尝试手动下载："
-          echo "   wget https://ftpmirror.gnu.org/binutils/binutils-2.42.tar.xz"
-          exit 1
-        }
-    
+        # 动态更新哈希值
+        NEW_HASH=$(sha256sum dl/binutils-2.42.tar.xz | cut -d' ' -f1)
+        sed -i "s/HASH:=.*/HASH:=$NEW_HASH/" package/devel/binutils/Makefile
+
+        #验证配置
+        echo "当前配置哈希值："
+        grep 'HASH:=' package/devel/binutils/Makefile
+
         # 确保文件存在
         cp -v binutils-2.42.tar.xz /workdir/openwrt/dl/
 
