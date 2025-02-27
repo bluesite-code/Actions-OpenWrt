@@ -1,5 +1,5 @@
 #!/bin/bash
-# 增强版 ImmortalWrt 定制脚本
+# 增强版 ImmortalWrt 定制脚本 v2.1
 
 set -euo pipefail  # 启用严格错误检查
 
@@ -74,46 +74,110 @@ function clean_conflicts() {
         -exec rm -fv {} \; 2>/dev/null || true
 }
 
-# 安装插件
-function install_plugins() {
-    echo "📦 开始安装插件..."
-    local PLUGINS=(
-        "https://github.com/bluesite-code/fros -b fros-23.05 package/fros"
-        "https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns"
-        "https://github.com/sbwml/v2ray-geodata package/v2ray-geodata"
-        "https://github.com/sbwml/luci-app-alist package/alist"
-        "https://github.com/sirpdboy/luci-app-advanced package/luci-app-advanced"
-        "https://github.com/sirpdboy/luci-app-autotimeset package/luci-app-autotimeset"
-        "https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon"
+# 添加第三方源到 feeds
+function add_custom_feeds() {
+    echo "📥 添加第三方软件源..."
+    local FEED_CONF="feeds.conf.default"
+    
+    # 备份原始文件
+    cp -f "$FEED_CONF" "${FEED_CONF}.bak" 2>/dev/null || true
+
+    # 定义第三方源列表
+    declare -A CUSTOM_FEEDS=(
+        ["fros"]="src-git fros https://github.com/bluesite-code/fros;fros-23.05"
+        ["mosdns"]="src-git mosdns https://github.com/sbwml/luci-app-mosdns;v5"
+        ["alist"]="src-git alist https://github.com/sbwml/luci-app-alist"
+        ["luci-advanced"]="src-git luci-advanced https://github.com/sirpdboy/luci-app-advanced"
+        ["luci-autotimeset"]="src-git luci-autotimeset https://github.com/sirpdboy/luci-app-autotimeset"
+        ["argon-theme"]="src-git argon-theme https://github.com/jerrykuku/luci-theme-argon"
     )
 
-    for repo in "${PLUGINS[@]}"; do
-        local args=($repo)
-        echo "🔧 克隆 ${args[0]}"
-        if ! git clone --depth 1 "${args[@]}"; then
-            echo "::warning::克隆失败: ${args[0]}"
-            continue
+    # 去重添加源
+    for key in "${!CUSTOM_FEEDS[@]}"; do
+        if ! grep -q "${CUSTOM_FEEDS[$key]}" "$FEED_CONF"; then
+            echo "➕ 添加源: $key"
+            echo "${CUSTOM_FEEDS[$key]}" >> "$FEED_CONF"
+        else
+            echo "⏩ 已存在: $key"
         fi
     done
-# 更新 feeds
-function update_feeds() {
-    echo "🔄 更新 feeds..."
-    ./scripts/feeds update -a
+
+    # 特殊处理 v2ray-geodata
+    if ! grep -q "v2ray-geodata" "$FEED_CONF"; then
+        echo "src-git v2raygeo https://github.com/sbwml/v2ray-geodata" >> "$FEED_CONF"
+    fi
+}
+
+# 安装插件配置
+function configure_plugins() {
+    echo "⚙️ 生成插件配置..."
+    local CONFIG_FILE=".config"
+    
+    # 基础依赖
+    echo "CONFIG_PACKAGE_luci=y" >> "$CONFIG_FILE"
+    echo "CONFIG_LUCI_LANG_zh_Hans=y" >> "$CONFIG_FILE"
+    
+    # 插件列表
+    local PLUGINS=(
+        "luci-app-fros"
+        "luci-app-mosdns"
+        "luci-app-alist"
+        "luci-app-advanced"
+        "luci-app-autotimeset"
+        "luci-theme-argon"
+        "v2ray-geodata"
+    )
+
+    # 写入配置
+    for plugin in "${PLUGINS[@]}"; do
+        echo "✅ 启用: $plugin"
+        echo "CONFIG_PACKAGE_${plugin}=y" >> "$CONFIG_FILE"
+    done
+
+    # 处理依赖
+    echo "🔗 安装依赖项..."
     ./scripts/feeds install -a
 }
 
+# 更新 feeds 增强版
+function update_feeds() {
+    echo "🔄 开始更新 feeds..."
+    local MAX_RETRY=2
+    
+    for ((i=1; i<=MAX_RETRY; i++)); do
+        echo "▶️ 第 $i 次尝试更新"
+        if ./scripts/feeds update -a; then
+            echo "✅ feeds 更新成功"
+            break
+        else
+            echo "❌ feeds 更新失败"
+            [ $i -eq MAX_RETRY ] && {
+                echo "::error::无法完成 feeds 更新"
+                exit 1
+            }
+            echo "等待 10 秒后重试..."
+            sleep 10
+        fi
+    done
+    
+    echo "📦 安装所有软件包"
+    ./scripts/feeds install -a --force-overwrite
+}
+
 # 主流程
-main() {
+function main() {
+    # 按顺序执行关键步骤
     replace_golang    # 必须先执行
     clean_conflicts   # 在安装前清理
-    install_plugins
-    update_feeds
+    add_custom_feeds  # 添加第三方源
+    update_feeds      # 更新源
+    configure_plugins # 生成配置
     
     echo "✅ 所有组件配置完成"
-    echo "=== 最终目录结构验证 ==="
-    tree -L 3 feeds/packages/lang || ls -lR feeds/packages/lang
-    echo "=== 冲突文件终检 ==="
-    ! find . -type f \( -name "*mosdns*" -o -name "*v2ray-geodata*" \) | grep .
+    echo "=== 最终 feeds 状态 ==="
+    ./scripts/feeds list -r
+    echo "=== 关键配置验证 ==="
+    grep -E 'CONFIG_PACKAGE|CONFIG_LUCI' .config || true
 }
 
 # 执行并记录日志
