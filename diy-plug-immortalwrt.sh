@@ -56,6 +56,13 @@ function replace_golang() {
             echo "✅ 验证通过: $file"
         fi
     done
+
+    # 合并前备份
+    cp .config .config.bak
+    make defconfig
+    # 恢复自定义配置
+    cat .config.bak >> .config
+    sort -u .config -o .config
 }
 
 # 清理冲突组件
