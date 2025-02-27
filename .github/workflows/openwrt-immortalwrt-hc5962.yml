@@ -53,73 +53,43 @@ jobs:
 
     - name: Load custom configuration
       run: |
-        # 增强调试信息 ▼▼▼
         echo "=== 初始目录结构 ==="
         ls -l
         echo "=== 工作区路径 ==="
         echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
         echo "当前目录: $(pwd)"
-        echo "=== 存储库内容 ==="
-        tree -L 2 || ls -al
-    
-        # 使用 rsync 安全传输文件 ▼▼▼
-        echo "=== 同步配置文件 ==="
+
         sudo mkdir -p /workdir/openwrt
         sudo chown -R $USER:$GROUPS /workdir/openwrt
-    
+
         [ -f feeds.conf.default ] && rsync -av --ignore-existing feeds.conf.default /workdir/openwrt/
         [ -d files ] && rsync -av --progress files/ /workdir/openwrt/files/
         [ -f .config ] && rsync -av --progress .config /workdir/openwrt/
-    
-        # 进入工作目录 ▼▼▼
+
         cd /workdir/openwrt
         echo "=== 目标目录结构 ==="
         tree -L 2 || ls -al
-    
-        # 确保 feeds.conf.default 存在 ▼▼▼
+
         [ -f feeds.conf.default ] || touch feeds.conf.default
-    
-        # 执行增强版脚本 ▼▼▼
+
         if [ -f $GITHUB_WORKSPACE/$DIY_P1_SH ]; then
           echo "=== 执行增强版 diy-plug-immortalwrt.sh ==="
           chmod +x $GITHUB_WORKSPACE/$DIY_P1_SH
-          
-          # 添加环境变量传递
           export GITHUB_WORKSPACE
           $GITHUB_WORKSPACE/$DIY_P1_SH 2>&1 | tee diy-plug.log
         else
           echo "::error::DIY 脚本 $DIY_P1_SH 未找到!"
           exit 1
         fi
-    
-        # 强制更新 feeds (带重复检查) ▼▼▼
-        echo "=== 预处理 feeds.conf.default ==="
-        awk '!seen[$0]++' feeds.conf.default > feeds.conf.tmp && mv feeds.conf.tmp feeds.conf.default
-        echo "=== 去重后的 feeds.conf ==="
-        cat feeds.conf.default
-    
-        echo "=== 强制更新 feeds ==="
-        ./scripts/feeds update -a -f || {
-          echo "::warning::首次更新失败，尝试清理后重试..."
-          rm -rf feeds
-          ./scripts/feeds update -a -f
-        }
-        ./scripts/feeds install -a -f --force-overwrite
-        ./scripts/feeds list -i
 
     - name: Download package
       id: package
       run: |
         cd /workdir/openwrt
-        # 合并保留已有配置
-        touch .config
-        make defconfig
-        # 确保自定义配置被保留
-        cat $GITHUB_WORKSPACE/.config >> .config || true
+        # 仅下载不重置配置
         make download -j8
         find dl -size -1024c -exec ls -l {} \; -delete
 
-    # 增强的编译步骤 ▼▼▼
     - name: Compile the firmware
       id: compile
       run: |
@@ -138,36 +108,20 @@ jobs:
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
 
-    # 重构的固件处理步骤 ▼▼▼
     - name: Organize files
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
         cd /workdir/openwrt/bin/targets
-        echo "=== 编译产物目录结构 ==="
-        tree -L 3
-        
-        # 动态查找目标目录
         TARGET_DIR=$(find . -mindepth 2 -maxdepth 2 -type d -not -path '*/packages/*' | head -1)
-        if [ -z "$TARGET_DIR" ]; then
-          echo "::error::未找到固件目录！可能原因："
-          echo "1. 编译未生成目标文件"
-          echo "2. 设备配置错误"
-          exit 1
-        fi
+        [ -z "$TARGET_DIR" ] && { echo "::error::未找到固件目录！"; exit 1; }
         
-        echo "目标目录: $TARGET_DIR"
         cd "$TARGET_DIR"
         rm -rf packages
-        echo "=== 最终文件列表 ==="
-        ls -lh
-        
-        # 重命名固件文件
         for f in *sysupgrade.bin; do
           new_name="mi-router-3g-$(date +%Y%m%d)-${f#*-}"
           mv -v "$f" "$new_name"
         done
-        
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
