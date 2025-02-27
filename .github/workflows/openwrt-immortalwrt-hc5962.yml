@@ -44,37 +44,37 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
+    - name: Clone source code
+      working-directory: /workdir
+      run: |
+        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+
+    # 调整后的预下载步骤
     - name: Pre-download binutils (GNU Mirror)
       run: |
-        mkdir -p /workdir/openwrt/dl
         cd /workdir/openwrt
-         # 步骤1：清洁环境
-        if [ -d .git ]; then
-          make distclean
-          rm -rf dl/binutils-2.42* tmp/
-        fi
-    
-        # 使用 GNU 官方镜像网络（自动选择最快节点）
+
+        # 创建必要目录
+        mkdir -p dl
+
+        # 清理旧文件
+        make distclean
+        rm -rf dl/binutils-2.42* tmp/
+
+        # 精确下载到dl目录
         wget --tries=5 --retry-connrefused --waitretry=30 --no-check-certificate \
+          -O dl/binutils-2.42.tar.xz \
           "https://ftpmirror.gnu.org/binutils/binutils-2.42.tar.xz"
-    
+
         # 动态更新哈希值
         NEW_HASH=$(sha256sum dl/binutils-2.42.tar.xz | cut -d' ' -f1)
         sed -i "s/HASH:=.*/HASH:=$NEW_HASH/" package/devel/binutils/Makefile
 
-        #验证配置
-        echo "当前配置哈希值："
+        # 验证操作
+        echo "=== 哈希更新验证 ==="
         grep 'HASH:=' package/devel/binutils/Makefile
-
-        # 确保文件存在
-        cp -v binutils-2.42.tar.xz /workdir/openwrt/dl/
-
-    - name: Clone source code
-      working-directory: /workdir
-      run: |
-        df -hT $PWD
-        git clone $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        ls -lh dl/binutils-2.42.tar.xz
 
     - name: Load custom configuration
       run: |
