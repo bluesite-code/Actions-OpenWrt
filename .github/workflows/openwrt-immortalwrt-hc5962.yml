@@ -111,9 +111,12 @@ jobs:
       id: package
       run: |
         cd /workdir/openwrt
+        # 合并保留已有配置
+        touch .config
         make defconfig
+        # 确保自定义配置被保留
+        cat $GITHUB_WORKSPACE/.config >> .config || true
         make download -j8
-        # 新增无效文件清理
         find dl -size -1024c -exec ls -l {} \; -delete
 
     # 增强的编译步骤 ▼▼▼
