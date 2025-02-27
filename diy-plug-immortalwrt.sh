@@ -105,6 +105,9 @@ function configure_plugins() {
     # 基础配置
     cat <<EOF >> "$CONFIG_FILE"
 CONFIG_PACKAGE_luci=y
+CONFIG_PACKAGE_libpam=y
+CONFIG_PACKAGE_liblzma=y
+CONFIG_PACKAGE_lm-sensors=y
 CONFIG_LUCI_LANG_zh_Hans=y
 EOF
 
