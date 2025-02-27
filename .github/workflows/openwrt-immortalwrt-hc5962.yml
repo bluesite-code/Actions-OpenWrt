@@ -44,6 +44,13 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
+    - name: Pre-download binutils
+      run: |
+        mkdir -p /workdir/openwrt/dl
+        cd /workdir/openwrt/dl
+        wget https://ftp.gnu.org/gnu/binutils/binutils-2.42.tar.xz
+        echo "e9a0d8b2d9d2ec5d3f34921c6e18332fadc248764a18039c3e218b67e4b182a7  binutils-2.42.tar.xz" | sha256sum -c
+
     - name: Clone source code
       working-directory: /workdir
       run: |
@@ -89,6 +96,12 @@ jobs:
         # 仅下载不重置配置
         make download -j8
         find dl -size -1024c -exec ls -l {} \; -delete
+
+    - name: Rebuild toolchain
+      run: |
+        cd /workdir/openwrt
+        make toolchain/clean
+        make toolchain/compile
 
     - name: Compile the firmware
       id: compile
