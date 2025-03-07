@@ -1,5 +1,6 @@
+#
 #!/bin/bash
-
+#
 
 # 添加必要的软件源和仓库
 sudo -E apt-get -qq install apt-utils
