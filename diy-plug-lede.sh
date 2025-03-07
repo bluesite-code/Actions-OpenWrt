@@ -19,7 +19,7 @@
 #echo 'src-git packages https://github.com/kiddin9/openwrt-packages.git' >>feeds.conf.default
 #sed -i '1i src-git kenzo https://github.com/kenzok8/openwrt-packages' feeds.conf.default
 #sed -i '2i src-git small https://github.com/kenzok8/small' feeds.conf.default
-sed -i '1i src-git haibo https://github.com/haiibo/openwrt-packages' feeds.conf.default
+#sed -i '1i src-git haibo https://github.com/haiibo/openwrt-packages' feeds.conf.default
 
 # Add fros
 git clone https://github.com/bluesite-code/fros -b fros-23.05 package/fros
@@ -32,6 +32,11 @@ find ./ | grep Makefile | grep v2ray-geodata | xargs rm -f
 find ./ | grep Makefile | grep mosdns | xargs rm -f
 git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
 git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
+
+# Add other
+git clone https://github.com/sirpdboy/luci-app-advanced package/luci-app-advanced
+git clone https://github.com/sirpdboy/luci-app-autotimeset package/luci-app-autotimeset
+git clone https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argo
 
 # Add theme
 #echo 'src-git infinityfreedomng https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom.git' >>feeds.conf.default
